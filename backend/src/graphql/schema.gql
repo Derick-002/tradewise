@@ -35,6 +35,13 @@ enum ENNotificationImpact {
   Medium
 }
 
+enum ENNotificationTimeFilters {
+  Old
+  Read
+  Recent
+  Unread
+}
+
 enum ENTransactionType {
   Purchase
   Sale
@@ -205,6 +212,7 @@ type Mutation {
   createTransaction(description: String!, financialDetails: GqlFinancialCreateInput, products: [GqlTransactionCreateProductInput!]!, secondParty: String!, type: ENTransactionType!): MGqlTransaction!
   deleteStockImage(stockImageId: String!): MGqlStockImage!
   markAsPaidBack(financialId: String!): MGqlFinancial!
+  markAsRead(id: String!): MGqlNotification!
   updateStockImage(name: String, stockImageId: String!, unit: EUnitType): MGqlStockImage!
 }
 
@@ -219,10 +227,12 @@ type ProductMap {
 }
 
 type Query {
+  getANotification(id: String!): MGqlNotification!
   getAllTransactions(type: ENTransactionType): [MGqlTransaction!]!
   getFinancial(financialId: String!): MGqlFinancial!
   getFinancials: [MGqlFinancial!]!
   getHello: String!
+  getNotifications(filters: ENNotificationFilterType, timeFilters: ENNotificationTimeFilters): [MGqlNotification!]!
   getStock: MGqlStock
   getStockImage(id: String!): MGqlStockImage
   getStockImages: [MGqlStockImage!]

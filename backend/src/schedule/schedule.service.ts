@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Timeout } from '@nestjs/schedule';
+import { Interval, Timeout } from '@nestjs/schedule';
 import { NotificationService } from 'src/communication/notification/notification.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -12,7 +12,7 @@ export class ScheduleService {
         private readonly notificationService: NotificationService,
     ) {}
 
-    @Timeout(5 * 60 * 1_000)  // for testing, in production it is for every_hour
+    @Interval(5 * 60 * 1_000)  // for testing, in production it is for every_hour
     public async sendingFinancials() {
         const now = new Date();
         const nextDay = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -52,5 +52,23 @@ export class ScheduleService {
 
             this.logger.log(`Sent ${sentNotifications} financial notifications.`);
         }
+    }
+
+    @Interval(5 * 60 * 1_000)
+    public async alertLowStocks() {
+        const stockImages = await this.prismaService.mStockImage.findMany({
+            where: { quantity: { lte: 10 }, notified: false },
+            include: { stock: { include: { trader: true } } }
+        });
+
+        let sentNotifications = 0;
+
+        for (const s of stockImages) {
+            const traderId = s.stock.trader.id;
+            await this.notificationService.lowStockAlert(traderId, s.id);
+            sentNotifications++;
+        }
+
+        this.logger.log(`Sent ${sentNotifications} low stock notifications.`);
     }
 }
