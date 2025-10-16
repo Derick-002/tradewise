@@ -19,6 +19,7 @@ import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library'
 import { MTrader, SendMessage } from 'generated/prisma';
 import generateOtp from 'src/custom/utils/generate.otp';
 import { CurrencyService } from 'src/custom/utils/currency.md';
+import { EPaymentMethod } from 'src/graphql/circular-dependency';
 
 @Injectable()
 export class AuthService {
@@ -171,38 +172,62 @@ export class AuthService {
     public async onboarding(details: TOnboardingDetails, id: string) {
         const { 
             enterpriseDescription, 
-            logoUrl, logo_PublicId, 
-            evaluationPeriod, 
-            deleteSoldStockAfterEvaluationPeriod, 
-            ussdCode, 
-            sendMessage,
-            currency
+            name,
+            currency,
+            businessType,
+            industry,
+            foundedYear,
+            description,
+            website,
+            address,
+            businessHours,
+            phoneNumber,
+            anualRevenue,
+            numberOfEmployees,
+            paymentMethod,
+            targetMarket,
+            competitors,
+            goals,
         } = details;
 
         try {
             const updateData: Partial<{
                 enterpriseDescription: string;
-                logoUrl: string;
-                logo_PublicId: string;
-                evaluationPeriod: number;
-                deleteSoldStockAfterEvaluationPeriod: boolean;
-                ussdCode: string;
-                sendMessage: SendMessage;
+                name: string;
                 currency: string;
+                businessType: string;
+                industry: string;
+                foundedYear: number;
+                description: string;
+                website: string;
+                address: string;
+                businessHours: string;
+                phoneNumber: string;
+                anualRevenue: number;
+                numberOfEmployees: number;
+                paymentMethod: EPaymentMethod;
+                targetMarket: string;
+                competitors: string;
+                goals: string;
             }> = {};
 
             if (enterpriseDescription) updateData.enterpriseDescription = enterpriseDescription;
-            if (logoUrl) updateData.logoUrl = logoUrl;
-            if (logo_PublicId) updateData.logo_PublicId = logo_PublicId;
-            if (evaluationPeriod) updateData.evaluationPeriod = evaluationPeriod;
-            if (deleteSoldStockAfterEvaluationPeriod != undefined) updateData.deleteSoldStockAfterEvaluationPeriod = deleteSoldStockAfterEvaluationPeriod;
-            if (ussdCode) updateData.ussdCode = ussdCode;
-            if (sendMessage != undefined) updateData.sendMessage = sendMessage;
-            if (currency) {
-                if(!this.currencyService.isValidCurrency(currency))
-                    throw new BadRequestException('Invalid currency code');
-                updateData.currency = currency;
-            }
+            if (name) updateData.name = name;
+            if (currency) updateData.currency = currency;
+            if (businessType) updateData.businessType = businessType;
+            if (industry) updateData.industry = industry;
+            if (foundedYear) updateData.foundedYear = foundedYear;
+            if (description) updateData.description = description;
+            if (website) updateData.website = website;
+            if (address) updateData.address = address;
+            if (businessHours) updateData.businessHours = businessHours;
+            if (phoneNumber) updateData.phoneNumber = phoneNumber;
+            if (anualRevenue) updateData.anualRevenue = anualRevenue;
+            if (numberOfEmployees) updateData.numberOfEmployees = numberOfEmployees;
+            if (paymentMethod) updateData.paymentMethod = paymentMethod;
+            if (targetMarket) updateData.targetMarket = targetMarket;
+            if (competitors) updateData.competitors = competitors;
+            if (goals) updateData.goals = goals;
 
             const settings = await this.prismaService.mTraderSettings.update({
                 where: { traderId: id }, 

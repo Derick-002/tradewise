@@ -32,22 +32,49 @@ model MTrader {
     @@index([phone])
 }
 
-enum SendMessage {
-    Email
-    Phone
+enum EPaymentMethod {
+    Cash
+    Credit_Card
+    Debit_Card
+    Bank_Transfer
+    Mobile_Money
+    PayPal
+    Check
+    Crypto
 }
 
 model MTraderSettings{ // contains both profile and basic settings
     id String @id @default(ulid())
     enterpriseDescription String @db.VarChar(255)
-    logo_PublicId String // for storing public_id
-    logoUrl String // to show 
     name String //name of the trader
     currency String @default("RWF") // default if Rwandan Franc
-    evaluationPeriod Int @default(7) // in days(weekly) 
-    deleteSoldStockAfterEvaluationPeriod Boolean @default(false)
-    ussdCode String
-    sendMessage SendMessage @default(Email)
+    
+    // basic
+    businessType String?
+    industry String?
+    foundedYear Int?
+    
+    // description
+    description String?
+    
+    // contact
+    website String?
+    address String? // of business
+    businessHours String? 
+    phoneNumber String?
+    
+    // scale
+    anualRevenue Float?
+    numberOfEmployees Int?
+    
+    // payment
+    paymentMethod EPaymentMethod?
+
+    // strategy
+    targetMarket String?
+    competitors String?
+    goals String?
+
     //timestamps
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

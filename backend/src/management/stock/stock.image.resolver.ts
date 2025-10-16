@@ -7,6 +7,7 @@ import { IJwtPayload } from 'src/auth/auth.types';
 import { UseGuards } from '@nestjs/common';
 import { ProtectedRouteGuard } from 'src/custom/guards/protected-route/protected-route.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { GqlStockImageInput } from './stock.types';
 
 @Resolver()
 export class StockImageResolver {
@@ -37,6 +38,15 @@ export class StockImageResolver {
     @Args('unit', { type: () => EUnitType }) unit: EUnitType,
   ) {
     return await this.stockService.createStockImage({ name, unit }, user.sub);
+  }
+  
+  @Mutation(() => [MGqlStockImage])
+  @UseGuards(ProtectedRouteGuard)
+  public async createMultipleStockImages(
+    @CurrentUser() user: IJwtPayload,
+    @Args('stockImages', { type: () => [GqlStockImageInput] }) stockImages: GqlStockImageInput[],
+  ){
+    return await this.stockService.createMultipleStockImages(stockImages, user.sub);
   }
   
   @Mutation(() => MGqlStockImage)

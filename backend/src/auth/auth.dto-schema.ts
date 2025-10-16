@@ -23,27 +23,24 @@ export const updateSchema = Joi.object({
 
 export const onboardingSchema = Joi.object({
     enterpriseDescription: Joi.string().optional(),
-    logo_PublicId: Joi.string().optional(),
-    logoUrl: Joi.string().optional(),
-    evaluationPeriod: Joi.number().optional(),
-    deleteSoldStockAfterEvaluationPeriod: Joi.boolean().optional(),
-    ussdCode: Joi.string().optional(),
-    sendMessage: Joi.string().optional(),
+    name: Joi.string().optional(),
     currency: Joi.string().optional(),
-});
-
-export const forgetPasswordSchema = Joi.object({
-    email: Joi.string().email().optional(),
-    phone: Joi.string().optional(),
-}).xor('phone', 'email')
-
-
-export const resetPasswordSchema = Joi.object({
-    otp: Joi.string().required(),
-    email: Joi.string().email().optional(),
-    phone: Joi.string().optional(),
-    password: Joi.string().min(6).required(),
-}).xor('phone', 'email')
+    businessType: Joi.string().optional(),
+    industry: Joi.string().optional(),
+    foundedYear: Joi.number().integer().optional(),
+    description: Joi.string().optional(),
+    website: Joi.string().uri().optional(),
+    address: Joi.string().optional(),
+    businessHours: Joi.string().optional(),
+    phoneNumber: Joi.string().optional(),
+    anualRevenue: Joi.number().optional(),
+    numberOfEmployees: Joi.number().integer().optional(),
+    paymentMethod: Joi.string().valid('Cash', 'Credit_Card', 'Debit_Card', 'Bank_Transfer', 'Mobile_Money', 'PayPal', 'Check', 'Crypto').optional(),
+    targetMarket: Joi.string().optional(),
+    competitors: Joi.string().optional(),
+    goals: Joi.string().optional(),
+    sendMessage: Joi.string().optional(),
+})
 
 export const sendOtpSchema = Joi.object({
     email: Joi.string().email().optional(),

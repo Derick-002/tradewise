@@ -61,11 +61,7 @@ export class StockService {
                     stockId: stock.id
                 },
                 include: {
-                    stock: {
-                        include: {
-                            trader: true
-                        }
-                    }
+                    stock: { include: { trader: true } }
                 }
             });
 
@@ -76,6 +72,40 @@ export class StockService {
                     throw new BadRequestException('Stock image already exists');
                 }
             }
+        }
+    }
+
+    public async createMultipleStockImages(
+        details: { name: string; unit: EUnitType }[],
+        traderId: string
+    ) {
+        const stock = await this.prismaService.mStock.findUnique({
+            where: { traderId },
+        });
+        if (!stock) throw new BadRequestException('Stock not found');
+
+        try {
+            const stockImages = await this.prismaService.$transaction(
+                details.map((detail) =>
+                    this.prismaService.mStockImage.create({
+                        data: {
+                            name: detail.name.toLowerCase(),
+                            unit: detail.unit,
+                            stockId: stock.id,
+                        },
+                        include: {
+                            stock: { include: { trader: true } },
+                        },
+                    })
+                )
+            );
+
+            return stockImages;
+        } catch (error) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new BadRequestException('One or more stock images already exist');
+            }
+            throw error;
         }
     }
 

@@ -1,4 +1,5 @@
 import { EUnitType, SendMessage } from "generated/prisma";
+import { EPaymentMethod } from "src/graphql/circular-dependency";
 
 export interface IJwtPayload {
     sub: string; // the id
@@ -27,17 +28,22 @@ export type TUpdateDetails = {
 
 export type TOnboardingDetails = {
     enterpriseDescription?: string,
-    logoUrl?: string,
-    logo_PublicId?: string,
-    evaluationPeriod?: number,
-    deleteSoldStockAfterEvaluationPeriod?: boolean,
-    ussdCode?: string,
+    name?: string,
     currency?: string,
-    sendMessage?: SendMessage,
-    products?: {
-        name: string;
-        unit: EUnitType;
-    }[]
+    businessType?: string,
+    industry?: string,
+    foundedYear?: number,
+    description?: string,
+    website?: string,
+    address?: string,
+    businessHours?: string,
+    phoneNumber?: string,
+    anualRevenue?: number,
+    numberOfEmployees?: number,
+    paymentMethod?: EPaymentMethod,
+    targetMarket?: string,
+    competitors?: string,
+    goals?: string,
 }
 
 export type TSendOtpDetails = {

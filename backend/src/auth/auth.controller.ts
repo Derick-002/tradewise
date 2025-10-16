@@ -87,30 +87,11 @@ export class AuthController {
     }
     
     @UseGuards(ProtectedRouteGuard)
-    @UseInterceptors(FileInterceptor('logo', { storage }))
     @Post('onboarding')
     public async onboarding(
         @ValidatedBody(onboardingSchema) dto: any,
         @CurrentUser() user: IJwtPayload,
-        @UploadedFile() logo?: Express.Multer.File
     ) {
-        try {    
-            const onboarding = await this.authService.getOnboarding(user.sub);
-            if (logo && onboarding.logo_PublicId)
-                await cloudinary.uploader.destroy(onboarding.logo_PublicId);
-    
-            return await this.authService.onboarding({
-                ...dto, 
-                logoUrl: logo?.path,
-                logo_PublicId: logo?.filename
-            }, user.sub);
-        } catch (error) {
-            if(logo?.filename && error instanceof multer.MulterError){
-                await cloudinary.uploader.destroy(logo?.filename);
-                throw new BadRequestException(error.message);
-            }
-
-            throw error;
-        }
+        return this.authService.onboarding(dto, user.sub);
     }
 }
