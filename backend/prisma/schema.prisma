@@ -10,6 +10,8 @@ datasource db {
 
 model MTrader {
     id String @id @default(ulid())
+    pTId String? @unique
+
     enterpriseName String  //or (username) the company name
     //business email & phone for communication when one null, other is used
     email String? @unique

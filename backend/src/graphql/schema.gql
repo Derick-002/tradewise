@@ -47,6 +47,17 @@ enum ENTransactionType {
   Sale
 }
 
+enum EPaymentMethod {
+  Bank_Transfer
+  Cash
+  Check
+  Credit_Card
+  Crypto
+  Debit_Card
+  Mobile_Money
+  PayPal
+}
+
 enum EUnitType {
   Kilogram
   Litre
@@ -64,6 +75,11 @@ input GqlFinancialCreateInput {
   deadline: DateTime
   description: String!
   type: ENFinancialType!
+}
+
+input GqlStockImageInput {
+  name: String!
+  unit: String!
 }
 
 input GqlTransactionCreateProductInput {
@@ -178,19 +194,28 @@ type MGqlTrader {
 }
 
 type MGqlTraderSettings {
+  address: String
+  anualRevenue: Float
+  businessHours: String
+  businessType: String
+  competitors: String
   createdAt: DateTime!
-  deleteSoldStockAfterEvaluationPeriod: Boolean!
+  currency: String!
+  description: String
   enterpriseDescription: String!
-  evaluationPeriod: Float!
+  foundedYear: Float
+  goals: String
   id: String!
-  logoUrl: String!
-  logo_PublicId: String!
+  industry: String
   name: String!
-  sendMessage: String!
+  numberOfEmployees: Float
+  paymentMethod: EPaymentMethod
+  phoneNumber: String
+  targetMarket: String
   trader: MGqlTrader!
   traderId: String!
   updatedAt: DateTime!
-  ussdCode: String!
+  website: String
 }
 
 type MGqlTransaction {
@@ -208,6 +233,7 @@ type MGqlTransaction {
 
 type Mutation {
   createFinancial(amount: Float!, collateral: String, deadline: DateTime, description: String!, type: ENFinancialType!): MGqlFinancial!
+  createMultipleStockImages(stockImages: [GqlStockImageInput!]!): [MGqlStockImage!]!
   createStockImage(name: String!, unit: EUnitType!): MGqlStockImage!
   createTransaction(description: String!, financialDetails: GqlFinancialCreateInput, products: [GqlTransactionCreateProductInput!]!, secondParty: String!, type: ENTransactionType!): MGqlTransaction!
   deleteStockImage(stockImageId: String!): MGqlStockImage!

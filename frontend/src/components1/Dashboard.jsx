@@ -28,14 +28,11 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
-
-
   if (!dashboardData) {
     return <div className="text-center py-8">No dashboard data available</div>;
   }
 
   const { today, this_month, inventory, recent_activity } = dashboardData;
-
 
   return (
     <div className="dashboard-container">

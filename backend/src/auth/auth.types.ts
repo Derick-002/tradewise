@@ -1,4 +1,4 @@
-import { EUnitType, SendMessage } from "generated/prisma";
+import { EUnitType } from "generated/prisma";
 import { EPaymentMethod } from "src/graphql/circular-dependency";
 
 export interface IJwtPayload {

@@ -1,5 +1,4 @@
 import { Field, ObjectType, registerEnumType } from "@nestjs/graphql";
-import { SendMessage } from "generated/prisma";
 import { MGqlTrader } from "../circular-dependency";
 
 export enum EPaymentMethod {

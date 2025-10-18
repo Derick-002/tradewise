@@ -12,7 +12,7 @@ export class AnalysisService {
         let { start, end } = details;
 
         const traderSettings = await this.prismaService.mTraderSettings.findUnique({ where: { traderId } });
-        const evalPeriod = traderSettings?.evaluationPeriod || 7; // default 7 days
+        const evalPeriod = 7; // default 7 days
 
         // Compute start and end safely
         const computedStart = start

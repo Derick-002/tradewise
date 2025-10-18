@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'; 
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common'; 
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -16,10 +16,11 @@ import {
     TVerifyOtpDetails,
 } from './auth.types';
 import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
-import { MTrader, SendMessage } from 'generated/prisma';
+import { MTrader } from 'generated/prisma';
 import generateOtp from 'src/custom/utils/generate.otp';
 import { CurrencyService } from 'src/custom/utils/currency.md';
 import { EPaymentMethod } from 'src/graphql/circular-dependency';
+import { generatePT, generatePTId, verifyPT } from 'src/custom/utils/passanger-encrypt';
 
 @Injectable()
 export class AuthService {
@@ -46,7 +47,7 @@ export class AuthService {
 
     public async generateToken(sub: string) {
         const payload: IJwtPayload = { sub, lastLoginAt: new Date() };
-        return await this.jwtService.signAsync(payload);
+        return await this.jwtService.signAsync(payload, { expiresIn: '7d' });
     }
 
     public async register(details: TRegisterDetails) {
@@ -62,10 +63,12 @@ export class AuthService {
             throw new BadRequestException('User with this phone or email already exists');
 
         const id = idTools.generateUlid();
+        const pTId = generatePTId();
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await this.prismaService.mTrader.create({
             data: {
                 id,
+                pTId,
                 email,
                 phone,
                 enterpriseName,
@@ -74,25 +77,11 @@ export class AuthService {
             }
         });
 
-        let sendMessageType: SendMessage;
-        if(email) 
-            sendMessageType = SendMessage.Email;
-        else if (phone)
-            sendMessageType = SendMessage.Phone;
-        else
-            sendMessageType = SendMessage.Email;
-
         // initializing the settings
         await this.prismaService.mTraderSettings.create({
             data: {
                 traderId: id,
                 enterpriseDescription: '',
-                logoUrl: '',
-                logo_PublicId: '',
-                evaluationPeriod: 7,
-                deleteSoldStockAfterEvaluationPeriod: false,
-                ussdCode: '',
-                sendMessage: sendMessageType,
                 name: enterpriseName
             }
         });
@@ -107,7 +96,7 @@ export class AuthService {
             }
         });
 
-        return newUser;
+        return { newUser, pT: generatePT(pTId) };
     }
 
     public async login(details: TLoginDetails) {
@@ -126,10 +115,13 @@ export class AuthService {
         if (!isPasswordValid) 
             throw new BadRequestException('Invalid credentials');
 
-        return await this.prismaService.mTrader.update({
+        const pTId = generatePTId();
+        const loginUser = await this.prismaService.mTrader.update({
             where: { id: user.id },
-            data: { lastLogin: new Date() },
+            data: { lastLogin: new Date(), pTId },
         });
+
+        return { loginUser, pT: generatePT(pTId) };
     }
 
     public async update(details: TUpdateDetails, id: string) {
@@ -156,89 +148,6 @@ export class AuthService {
                     throw new BadRequestException('Phone or email already exists');
                 if (error.code === 'P2025') 
                     throw new BadRequestException('User not found');
-            }
-
-            throw new InternalServerErrorException(error.message ?? "Something went wrong");
-        }
-    }
-
-    public async getOnboarding(id: string) {
-        const settings = await this.prismaService.mTraderSettings.findUnique({ where: { traderId: id } });
-        if (!settings) 
-            throw new BadRequestException('Trader onboarding settings not found');
-        return settings;
-    }
-
-    public async onboarding(details: TOnboardingDetails, id: string) {
-        const { 
-            enterpriseDescription, 
-            name,
-            currency,
-            businessType,
-            industry,
-            foundedYear,
-            description,
-            website,
-            address,
-            businessHours,
-            phoneNumber,
-            anualRevenue,
-            numberOfEmployees,
-            paymentMethod,
-            targetMarket,
-            competitors,
-            goals,
-        } = details;
-
-        try {
-            const updateData: Partial<{
-                enterpriseDescription: string;
-                name: string;
-                currency: string;
-                businessType: string;
-                industry: string;
-                foundedYear: number;
-                description: string;
-                website: string;
-                address: string;
-                businessHours: string;
-                phoneNumber: string;
-                anualRevenue: number;
-                numberOfEmployees: number;
-                paymentMethod: EPaymentMethod;
-                targetMarket: string;
-                competitors: string;
-                goals: string;
-            }> = {};
-
-            if (enterpriseDescription) updateData.enterpriseDescription = enterpriseDescription;
-            if (name) updateData.name = name;
-            if (currency) updateData.currency = currency;
-            if (businessType) updateData.businessType = businessType;
-            if (industry) updateData.industry = industry;
-            if (foundedYear) updateData.foundedYear = foundedYear;
-            if (description) updateData.description = description;
-            if (website) updateData.website = website;
-            if (address) updateData.address = address;
-            if (businessHours) updateData.businessHours = businessHours;
-            if (phoneNumber) updateData.phoneNumber = phoneNumber;
-            if (anualRevenue) updateData.anualRevenue = anualRevenue;
-            if (numberOfEmployees) updateData.numberOfEmployees = numberOfEmployees;
-            if (paymentMethod) updateData.paymentMethod = paymentMethod;
-            if (targetMarket) updateData.targetMarket = targetMarket;
-            if (competitors) updateData.competitors = competitors;
-            if (goals) updateData.goals = goals;
-
-            const settings = await this.prismaService.mTraderSettings.update({
-                where: { traderId: id }, 
-                data: updateData
-            });
-    
-            return settings;
-        } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError) {
-                if (error.code === 'P2025')
-                    throw new Error('User not found');
             }
 
             throw new InternalServerErrorException(error.message ?? "Something went wrong");
@@ -334,5 +243,118 @@ export class AuthService {
         });
 
         return user;
+    }
+
+    public async checkAuth(traderId: string, passengerToken: string) {
+        const pTpayload = verifyPT(passengerToken);
+        if (!pTpayload)
+            throw new UnauthorizedException('Invalid Passenger Token1');
+
+        const pTId = generatePTId();
+        const pT = generatePT(pTId);
+        
+        console.log("pTId", pTId);
+        console.log("pTpayload.ulid", pTpayload.ulid);
+        console.log("traderId", traderId);
+        console.log("pT", pT);
+
+        const traderExists = await this.prismaService.mTrader.findUnique({
+            where: { pTId: pTpayload.ulid, id: traderId },
+        });
+        if (!traderExists) 
+            throw new UnauthorizedException('Invalid Passenger Token2');
+
+        const trade = await this.prismaService.mTrader.update({
+            where: { id: traderId },
+            data: { pTId }
+        });
+
+        return {
+            verified: true,
+            pT: pT
+        };
+    }
+
+    public async getOnboarding(id: string) {
+        const settings = await this.prismaService.mTraderSettings.findUnique({ where: { traderId: id } });
+        if (!settings) 
+            throw new BadRequestException('Trader onboarding settings not found');
+        return settings;
+    }
+
+    public async onboarding(details: TOnboardingDetails, id: string) {
+        const { 
+            enterpriseDescription, 
+            name,
+            currency,
+            businessType,
+            industry,
+            foundedYear,
+            description,
+            website,
+            address,
+            businessHours,
+            phoneNumber,
+            anualRevenue,
+            numberOfEmployees,
+            paymentMethod,
+            targetMarket,
+            competitors,
+            goals,
+        } = details;
+
+        try {
+            const updateData: Partial<{
+                enterpriseDescription: string;
+                name: string;
+                currency: string;
+                businessType: string;
+                industry: string;
+                foundedYear: number;
+                description: string;
+                website: string;
+                address: string;
+                businessHours: string;
+                phoneNumber: string;
+                anualRevenue: number;
+                numberOfEmployees: number;
+                paymentMethod: EPaymentMethod;
+                targetMarket: string;
+                competitors: string;
+                goals: string;
+            }> = {};
+
+            if (enterpriseDescription) updateData.enterpriseDescription = enterpriseDescription;
+            if (name) updateData.name = name;
+            if (currency) updateData.currency = currency;
+            if (businessType) updateData.businessType = businessType;
+            if (industry) updateData.industry = industry;
+            if (foundedYear) updateData.foundedYear = foundedYear;
+            if (description) updateData.description = description;
+            if (website) updateData.website = website;
+            if (address) updateData.address = address;
+            if (businessHours) updateData.businessHours = businessHours;
+            if (phoneNumber) updateData.phoneNumber = phoneNumber;
+            if (anualRevenue) updateData.anualRevenue = anualRevenue;
+            if (numberOfEmployees) updateData.numberOfEmployees = numberOfEmployees;
+            if (paymentMethod) updateData.paymentMethod = paymentMethod;
+            if (targetMarket) updateData.targetMarket = targetMarket;
+            if (competitors) updateData.competitors = competitors;
+            if (goals) updateData.goals = goals;
+
+            const settings = await this.prismaService.mTraderSettings.update({
+                where: { traderId: id }, 
+                data: updateData
+            });
+    
+            return settings;
+        } catch (error) {
+            if (error instanceof PrismaClientKnownRequestError) {
+                if (error.code === 'P2025')
+                    throw new Error('User not found');
+            }
+
+            throw new InternalServerErrorException(error.message ?? "Something went wrong");
+        }
     }
 }
