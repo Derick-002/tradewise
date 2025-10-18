@@ -17,6 +17,7 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe());
     app.use(express.json());
     app.use(cookieParser());
+    app.enableCors();
 
     // Middlewares
     app.use(loggerMiddleware());

@@ -41,7 +41,6 @@ export class EmailService {
         await this.sendEmail(option);
     }
 
-
     // for internal use only
     private async sendEmail(option: IEmailOptions){
         const transporter = nodemailer.createTransport({
@@ -63,5 +62,24 @@ export class EmailService {
         }
 
         await transporter.sendMail(emailOptions);
+    }
+
+    public async contactUs(name: string, email: string, message: string) {
+        const option: IEmailOptions = {
+            to: "communications@tradewise.com",
+            subject: "Contact Us",
+            text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+            html: `
+                <h3>Contact Us Message</h3>
+                <p><strong>Nsame:</strong> ${name}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Message:</strong> ${message}</p>
+            `
+        };
+        await this.sendEmail(option);
+        
+        return {
+            message: "Email sent successfully"
+        }
     }
 }

@@ -15,6 +15,7 @@ import { SettingsMiddleware } from './custom/middlewares/settings/settings.middl
 import { ManagementModule } from './management/management.module';
 import { IJwtPayload } from './auth/auth.types';
 import { ScheduleModule } from './schedule/schedule.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
     imports: [
@@ -49,6 +50,10 @@ import { ScheduleModule } from './schedule/schedule.module';
                 return { req, res, user }; 
             },
         }),
+        ThrottlerModule.forRoot([{
+            ttl: 60,
+            limit: 5,
+        }]),
         ScheduleModule,
         AuthModule,
         CommunicationModule,
