@@ -32,8 +32,6 @@ const Forgotpassword = () => {
       }
   }
 
-
-
   const handleCodeSubmit = (e) => {
     e.preventDefault();
     setIsloading(true);

@@ -1,26 +1,29 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Home.module.css';
+import backendApi from '../utils/axiosInstance';
+import { handleError } from '../utils/handleError';
 
 const AfterSignup = () => {
   const [formData, setFormData] = useState({
-    business_name: '',
-    business_type: '',
+    enterpriseDescription: '',
+    name: '',
+    currency: '',
+    businessType: '',
     industry: '',
+    foundedYear: '',
     description: '',
-    address: '',
-    phone: '',
     website: '',
-    tax_id: '',
-    business_license: '',
-    annual_revenue: '',
-    employee_count: '',
-    founded_year: '',
-    business_hours: '',
-    payment_methods: [],
-    target_market: '',
+    address: '',
+    businessHours: '',
+    phoneNumber: '',
+    anualRevenue: '',
+    numberOfEmployees: '',
+    paymentMethod: '',
+    targetMarket: '',
     competitors: '',
-    business_goals: ''
+    goals: '',
+    sendMessage: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -28,45 +31,44 @@ const AfterSignup = () => {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
-  const requiredKeys = ['business_name'];
+  // Only business name is required
+  const requiredKeys = ['name'];
   const progress = useMemo(() => {
-    const total = 10; // virtual total steps
-    let filled = 0;
-    if (formData.business_name) filled += 3;
-    if (formData.business_type) filled += 1;
-    if (formData.industry) filled += 1;
-    if (formData.description) filled += 1;
-    if (formData.address || formData.phone || formData.website) filled += 2;
-    if (formData.payment_methods.length) filled += 1;
-    if (formData.business_goals) filled += 1;
+    const total = Object.keys(formData).length;
+    const filled = Object.values(formData).filter(value =>
+      value !== '' && value !== null && value !== undefined
+    ).length;
     return Math.min(100, Math.round((filled / total) * 100));
   }, [formData]);
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox' && name === 'payment_methods') {
-      const checked = e.target.checked;
-      setFormData(prev => ({
-        ...prev,
-        payment_methods: checked 
-          ? [...prev.payment_methods, value]
-          : prev.payment_methods.filter(method => method !== value)
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('Saving your profile...');
-    console.log('AfterSignup form data (UI only):', formData);
-    setTimeout(() => {
+    try {
+      const res = await backendApi.post('/auth/onboarding', formData);
+      console.log(res.data);
+      setSuccess('Profile saved successfully!');
+      setTimeout(() => navigate('/dashboard'), 700);
+    } catch (error) {
+      console.log(error);
+      handleError(error);
+    } finally {
       setLoading(false);
-      setSuccess('Profile saved. You can proceed to the dashboard.');
-    }, 800);
+    }
+    
+    // setSuccess('Saving your profile...');
+    // console.log('AfterSignup form data:', formData);
+    // setTimeout(() => {
+    //   setLoading(false);
+    //   setSuccess('Profile saved successfully!');
+    //   setTimeout(() => navigate('/dashboard'), 1500);
+    // }, 800);
   };
 
   const canProceed = requiredKeys.every(k => !!formData[k]);
@@ -77,7 +79,7 @@ const AfterSignup = () => {
         {/* Header */}
         <div className="relative bg-gradient-to-r from-brand-500 to-amber-500 text-white text-center py-10 px-6">
           <h1 className="text-3xl sm:text-4xl font-bold">Complete Your Business Profile</h1>
-          <p className="mt-2 text-base sm:text-lg opacity-90">Welcome to TradeWise! Let’s set up your premium business profile.</p>
+          <p className="mt-2 text-base sm:text-lg opacity-90">Welcome to TradeWise! Let's set up your business profile.</p>
           <div className="absolute left-6 right-6 -bottom-4">
             <div className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
               <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progress}%` }}></div>
@@ -95,10 +97,12 @@ const AfterSignup = () => {
             {/* Section: Basic Info */}
             <Section title="Basic Information" subtitle="Tell us about your business.">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <InputField label="Business Name *" name="business_name" value={formData.business_name} onChange={handleChange} required placeholder="Your business name" />
-                <SelectField label="Business Type" name="business_type" value={formData.business_type} onChange={handleChange} options={['Sole Proprietorship','Partnership','Corporation','LLC','Franchise','Other']} />
+                <InputField label="Name *" name="name" value={formData.name} onChange={handleChange} required placeholder="Trader's name" />
+                <InputField label="Enterprise Description" name="enterpriseDescription" value={formData.enterpriseDescription} onChange={handleChange} placeholder="Brief description of your enterprise" />
+                <SelectField label="Business Type" name="businessType" value={formData.businessType} onChange={handleChange} options={['Sole Proprietorship','Partnership','Corporation','LLC','Franchise','Other']} />
                 <InputField label="Industry" name="industry" value={formData.industry} onChange={handleChange} placeholder="Technology, Retail, Manufacturing" />
-                <InputField label="Founded Year" type="number" name="founded_year" value={formData.founded_year} onChange={handleChange} placeholder="e.g., 2020" min="1900" max={new Date().getFullYear()} />
+                <InputField label="Founded Year" type="number" name="foundedYear" value={formData.foundedYear} onChange={handleChange} placeholder="e.g., 2020" min="1900" max={new Date().getFullYear()} />
+                <InputField label="Currency" name="currency" value={formData.currency} onChange={handleChange} placeholder="USD, EUR, etc." />
               </div>
             </Section>
 
@@ -111,42 +115,46 @@ const AfterSignup = () => {
             <Section title="Contacts" subtitle="How can customers reach you?">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <TextAreaField label="Address" name="address" value={formData.address} onChange={handleChange} placeholder="Business address" rows={2} />
-                <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} placeholder="Business phone number" />
+                <InputField label="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="Business phone number" />
                 <InputField label="Website" type="url" name="website" value={formData.website} onChange={handleChange} placeholder="https://yourwebsite.com" />
-                <InputField label="Business Hours" name="business_hours" value={formData.business_hours} onChange={handleChange} placeholder="Monday-Friday 9AM-6PM" />
+                <InputField label="Business Hours" name="businessHours" value={formData.businessHours} onChange={handleChange} placeholder="Monday-Friday 9AM-6PM" />
               </div>
             </Section>
 
             {/* Financial Info */}
             <Section title="Scale" subtitle="A quick sense of size.">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <InputField label="Annual Revenue" type="number" name="annual_revenue" value={formData.annual_revenue} onChange={handleChange} placeholder="Annual revenue amount" />
-                <InputField label="Number of Employees" type="number" name="employee_count" value={formData.employee_count} onChange={handleChange} placeholder="Number of employees" />
+                <InputField label="Annual Revenue" type="number" name="anualRevenue" value={formData.anualRevenue} onChange={handleChange} placeholder="Annual revenue amount" />
+                <InputField label="Number of Employees" type="number" name="numberOfEmployees" value={formData.numberOfEmployees} onChange={handleChange} placeholder="Number of employees" />
               </div>
             </Section>
 
             {/* Payment Methods */}
             <Section title="Payments" subtitle="What do you accept?">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Accepted Payment Methods</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {['Cash','Credit Card','Debit Card','Bank Transfer','Mobile Money','PayPal','Check','Crypto'].map(method => (
-                    <label key={method} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-all">
-                      <input type="checkbox"  className="h-4 w-4 accent-brand-500 border-gray-300 rounded focus:ring-brand-500/40" name="payment_methods" value={method} checked={formData.payment_methods.includes(method)} onChange={handleChange} />
-                      <span className="ml-2 text-sm text-gray-700">{method}</span>
-                    </label>
-                  ))}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent transition-all bg-white/80">
+                  <option value="">Select payment method</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Credit_Card">Credit Card</option>
+                  <option value="Debit_Card">Debit Card</option>
+                  <option value="Bank_Transfer">Bank Transfer</option>
+                  <option value="Mobile_Money">Mobile Money</option>
+                  <option value="PayPal">PayPal</option>
+                  <option value="Check">Check</option>
+                  <option value="Crypto">Crypto</option>
+                </select>
               </div>
             </Section>
 
             {/* Business Strategy */}
             <Section title="Strategy" subtitle="Who, and how will you serve them?">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <TextAreaField label="Target Market" name="target_market" value={formData.target_market} onChange={handleChange} placeholder="Describe your target market..." rows={2} />
+                <TextAreaField label="Target Market" name="targetMarket" value={formData.targetMarket} onChange={handleChange} placeholder="Describe your target market..." rows={2} />
                 <TextAreaField label="Competitors" name="competitors" value={formData.competitors} onChange={handleChange} placeholder="List your main competitors..." rows={2} />
               </div>
-              <TextAreaField label="Business Goals" name="business_goals" value={formData.business_goals} onChange={handleChange} placeholder="Short-term and long-term goals..." rows={3} />
+              <TextAreaField label="Goals" name="goals" value={formData.goals} onChange={handleChange} placeholder="Short-term and long-term goals..." rows={3} />
+              <TextAreaField label="Message" name="sendMessage" value={formData.sendMessage} onChange={handleChange} placeholder="Any additional message..." rows={2} />
             </Section>
 
             {/* Buttons */}

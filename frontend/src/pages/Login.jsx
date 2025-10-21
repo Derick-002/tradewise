@@ -200,6 +200,14 @@ const Login = () => {
                     Sign up
                   </Link>
                 </p>
+                <p className="text-center text-sm text-gray-500 dark:text-gray-300">
+                  <Link
+                    to="/forgotpassword"
+                    className="text-brand-600 text-md font-semibold underline hover:text-amber-600 transition-colors"
+                    >
+                    Forgot password?
+                  </Link>
+                </p>
               </form>
             </div>
 
