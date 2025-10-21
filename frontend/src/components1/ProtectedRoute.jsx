@@ -1,30 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Navigate } from "react-router-dom";
+import { fetchUser } from "../features/auth/authThuck";
+import { CgSpinner } from "react-icons/cg";
 
 const ProtectedRoute = ({ children, requireAuth = true }) => {
-  const { isAuthenticated, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const [fetched, setFetched] = useState(false);
 
+  // Only fetch user if not present and not already loading
+  // This prevents the race condition after login/signup
   useEffect(() => {
-    if (!loading && requireAuth && !isAuthenticated) {
-      navigate('/login');
+    if (user === null && !loading && !fetched) {
+      dispatch(fetchUser());
+      setFetched(true);
     }
-  }, [isAuthenticated, loading, requireAuth, navigate]);
+  }, [user, loading, fetched, dispatch]);
 
+  // Show spinner while loading
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#BE741E] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col justify-center items-center gap-6 text-center">
+          <CgSpinner className="animate-spin text-[#BE741E]" size={80} />
+          <span className="text-3xl font-extrabold text-gray-800">
+            Authenticating<span className="dots"></span>
+          </span>
         </div>
       </div>
     );
   }
 
+  // Redirect based on auth requirement
+  if (requireAuth && !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!requireAuth && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return children;
 };
-
 
 export default ProtectedRoute;

@@ -17,7 +17,10 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe());
     app.use(express.json());
     app.use(cookieParser());
-    app.enableCors();
+    app.enableCors({
+        origin: 'http://localhost:2016', 
+        credentials: true,
+    });
 
     // Middlewares
     app.use(loggerMiddleware());

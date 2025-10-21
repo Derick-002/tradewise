@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { MdDashboard, MdStorage, MdHistory, MdShoppingBag, MdAttachMoney, MdNotifications, MdCreditCard, MdShowChart, MdLogout } from "react-icons/md";
+import { MdDashboard, MdStorage, MdHistory, MdShoppingBag, MdAttachMoney, MdNotifications, MdCreditCard, MdLogout } from "react-icons/md";
 import logo from '../assets/logo.png';
 import Dashboard from './Dashboard';
 import Stock from './Stock';
@@ -14,16 +13,19 @@ import Profile from './Profile';
 import '../index.css';
 import { mockNotifications, mockApiResponse } from '../__mock__';
 import { CgProfile } from "react-icons/cg";
-
-
+import { toast, ToastContainer } from 'react-toastify';
+import { handleError } from '../utils/handleError';
+import { useSelector, useDispatch } from "react-redux";
+import { logoutUser } from "../features/auth/authThuck";
 
 const DashboardLayout = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
   const navigate = useNavigate();
-  const { user, logout: authLogout } = useAuth();
+  const dispatch = useDispatch();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const { user } = useSelector((state) => state.auth);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
-
+  const [loading, setLoading] = useState(false);
 
   const tabs = [
     { id: 'dashboard', name: 'Dashboard', icon: <MdDashboard className="mr-4 text-xl text-white" /> },
@@ -36,34 +38,35 @@ const DashboardLayout = () => {
     { id: 'profile', name: 'Profile', icon: <CgProfile className="mr-4 text-xl text-white" /> },
   ];
 
-  const handleLogout = () => {
-    authLogout();
-    navigate('/Login');
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await dispatch(logoutUser());
+      toast.success("Logged out successfully !!!");
+      navigate("/login");
+    } catch (error) {
+      const { message } = handleError(error);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'stock':
-        return <Stock />;
-      case 'history':
-        return <History />;
-      case 'buying':
-        return <BuyingProducts />;
-      case 'selling':
-        return <SellingProducts />;
-      case 'notification':
-        return <Notification />;
-      case 'credits':
-        return <CreditsDebit />;
-      case 'profile':
-        return <Profile />;
-      default:
-        return <Dashboard />;
+      case 'dashboard': return <Dashboard />;
+      case 'stock': return <Stock />;
+      case 'history': return <History />;
+      case 'buying': return <BuyingProducts />;
+      case 'selling': return <SellingProducts />;
+      case 'notification': return <Notification />;
+      case 'credits': return <CreditsDebit />;
+      case 'profile': return <Profile />;
+      default: return <Dashboard />;
     }
   };
-
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -80,20 +83,28 @@ const DashboardLayout = () => {
     fetchNotifications();
   }, []);
 
-
   const markNotificationAsRead = (notificationId) => {
     setNotifications(prev => prev.filter(n => n.id !== notificationId));
   };
 
+  // Redirect if user is not logged in
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
   return (
     <div className="flex h-screen bg-white font-sans text-gray-800 hide-scrollbar">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={true} closeOnClick pauseOnHover draggable theme="colored" />
+
+      {/* Sidebar */}
       <div className="w-64 shadow-2xl flex flex-col border-r border-gray-200 hide-scrollbar" style={{ backgroundColor: '#be741e' }}>
         <div className="p-6 border-b border-gray-200 flex items-center">
           <img src={logo} alt="TradeWise logo" className='w-[50px] h-[40px] rounded-full mr-1' />
           <h1 className="text-2xl font-bold tracking-wide text-white">TradeWise</h1>
         </div>
-      
-        {/* Navigation */}
+
         <nav className="flex-grow p-4 md:p-6 space-y-2 hide-scrollbar">
           <ul>
             {tabs.map((tab) => (
@@ -114,7 +125,6 @@ const DashboardLayout = () => {
           </ul>
         </nav>
 
-
         <div className="p-4 md:p-6 border-t border-gray-200">
           <button 
             onClick={handleLogout}
@@ -126,9 +136,8 @@ const DashboardLayout = () => {
         </div>
       </div>
 
-
+      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden bg-white text-gray-800 hide-scrollbar">
-
         <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white border-b border-gray-200 shadow-sm text-gray-800">
           <div className="text-2xl md:text-3xl font-semibold">
             Welcome Back, {user?.company_name || 'User'}!
@@ -141,9 +150,10 @@ const DashboardLayout = () => {
             <div className="relative">
               <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none">
                 <MdNotifications className="h-6 w-6" />
-                {notifications.length > 0 && ( <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"> {notifications.length} </span> )}
+                {notifications.length > 0 && ( 
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"> {notifications.length} </span> 
+                )}
               </button>
-              
 
               {showNotifications && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50 border">
@@ -184,4 +194,4 @@ const DashboardLayout = () => {
   );
 };
 
-export default DashboardLayout; 
+export default DashboardLayout;

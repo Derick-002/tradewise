@@ -1,21 +1,21 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
+import * as path from 'path';
+import { GraphQLModule } from '@nestjs/graphql';
 import { AppController } from './app.controller';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AppService } from './app.service';
 import { AppResolver } from './app.resolver';
-import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { AuthModule } from './auth/auth.module';
 import { CommunicationModule } from './communication/communication.module';
 import { EmailService } from './communication/email/email.service';
-import * as path from 'path';
 import { PrismaModule } from './prisma/prisma.module';
 import { SettingsMiddleware } from './custom/middlewares/settings/settings.middleware';
 import { ManagementModule } from './management/management.module';
 import { IJwtPayload } from './auth/auth.types';
 import { ScheduleModule } from './schedule/schedule.module';
-import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
     imports: [

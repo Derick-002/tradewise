@@ -7,7 +7,10 @@ import { ENFinancialType, ENTransactionType } from 'generated/prisma';
 import { GqlTransactionCreateProductInput, TTransactionCreateProduct } from './transaction.types';
 import { GqlFinancialCreateInput } from '../financials/financials.types';
 import { FinancialsService } from '../financials/financials.service';
+import { VerifiedGuard } from 'src/custom/guards/verified/verified.guard';
+import { UseGuards } from '@nestjs/common';
 
+@UseGuards(VerifiedGuard)
 @Resolver()
 export class TransactionResolver {
   public constructor(

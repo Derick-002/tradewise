@@ -5,7 +5,10 @@ import { CurrentUser } from 'src/custom/decorators/currentUser.decorator';
 import { IJwtPayload } from 'src/auth/auth.types';
 import { GqlTransactionCreateProductInput } from '../transaction/transaction.types';
 import { ENFinancialType } from 'generated/prisma';
+import { UseGuards } from '@nestjs/common';
+import { VerifiedGuard } from 'src/custom/guards/verified/verified.guard';
 
+@UseGuards(VerifiedGuard)
 @Resolver()
 export class FinancialsResolver {
   public constructor(private readonly financialsService: FinancialsService) {}

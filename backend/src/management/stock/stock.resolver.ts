@@ -3,7 +3,10 @@ import { StockService } from './stock.service';
 import { MGqlStock } from 'src/graphql/circular-dependency';
 import { CurrentUser } from 'src/custom/decorators/currentUser.decorator';
 import { IJwtPayload } from 'src/auth/auth.types';
+import { VerifiedGuard } from 'src/custom/guards/verified/verified.guard';
+import { UseGuards } from '@nestjs/common';
 
+@UseGuards(VerifiedGuard)
 @Resolver()
 export class StockResolver {
     public constructor(

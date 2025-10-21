@@ -10,25 +10,26 @@ import { ProtectedRouteGuard } from 'src/custom/guards/protected-route/protected
 import { UnProtectedRouteGuard } from 'src/custom/guards/un-protected-route/un-protected-route.guard';
 import { SanitizeInterceptor } from 'src/custom/interceptors/sanitize/sanitize.interceptor';
 
-@UseInterceptors(SanitizeInterceptor)
 @Controller('auth')
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
         private readonly configService: ConfigService
     ) {}
-
+    
     private time = 7 * 24 * 60 * 60 * 1000;
-
+    
     @UseGuards(ProtectedRouteGuard)
+    @UseInterceptors(SanitizeInterceptor)
     @Get()
     public async get(
         @CurrentUser() user: IJwtPayload
     ) {
         return this.authService.getProfile(user.sub);
     }
-
+    
     @UseGuards(UnProtectedRouteGuard)
+    @UseInterceptors(SanitizeInterceptor)
     @Post('register')
     public async register(
         @ValidatedBody(registerSchema) dto: any,
@@ -43,11 +44,12 @@ export class AuthController {
             sameSite: 'strict',
             maxAge: this.time // for 7 days
         });
-
+        
         return output;
     }
     
     @UseGuards(UnProtectedRouteGuard)
+    @UseInterceptors(SanitizeInterceptor)
     @Post('login')
     public async login(
         @ValidatedBody(loginSchema) dto: any,
@@ -62,7 +64,7 @@ export class AuthController {
             sameSite: 'strict',
             maxAge: this.time // for 7 days
         });
-
+        
         return output;
     }
     
@@ -76,6 +78,7 @@ export class AuthController {
     }
     
     @UseGuards(ProtectedRouteGuard)
+    @UseInterceptors(SanitizeInterceptor)
     @Patch()
     public async update(
         @ValidatedBody(updateSchema) dto: any,

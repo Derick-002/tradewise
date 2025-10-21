@@ -13,10 +13,9 @@ import { CartProvider } from "./contexts/CartContext";
 import Forgotpassword from "./pages/Forgotpassword";
 import Resetpassword from "./pages/Resetpassword";
 import NotFound from "./pages/Notfound";
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-
+import ProtectedRoute from './components1/ProtectedRoute';
 
 function App() {
   return (
@@ -26,13 +25,15 @@ function App() {
     <Router>
       <Routes>
           <Route path="/" element={ <Home />}></Route>
-          <Route path="/login" element={ <Login />}></Route>
-          <Route path="/signup" element={ <Signup />}></Route>
+          <Route path="/login" element={ <ProtectedRoute requireAuth={false}><Login /></ProtectedRoute> }></Route>
+          <Route path="/signup" element={ <ProtectedRoute requireAuth={false} isSignup={true}><Signup /></ProtectedRoute> }></Route>
           <Route path='/email' element={<VerifyEmail />}></Route>
           <Route path='/dashboard' element={
-            <CartProvider>
-              <DashboardLayout />
-            </CartProvider>
+            <ProtectedRoute>
+              <CartProvider>
+                <DashboardLayout />
+              </CartProvider>
+            </ProtectedRoute>
           }></Route>
           <Route path='/salesdata' element={<Form />}></Route>
           <Route path='/purchasedata' element={<Pform />}></Route>

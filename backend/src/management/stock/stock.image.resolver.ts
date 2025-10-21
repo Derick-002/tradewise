@@ -8,13 +8,14 @@ import { UseGuards } from '@nestjs/common';
 import { ProtectedRouteGuard } from 'src/custom/guards/protected-route/protected-route.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GqlStockImageInput } from './stock.types';
+import { VerifiedGuard } from 'src/custom/guards/verified/verified.guard';
 
+@UseGuards(VerifiedGuard)
 @Resolver()
 export class StockImageResolver {
   public constructor(private readonly stockService: StockService) {}
 
   @Query(() => [MGqlStockImage], { nullable: true })
-  @UseGuards(ProtectedRouteGuard)
   public async getStockImages(
     @CurrentUser() userId: IJwtPayload
   ) {
@@ -22,7 +23,6 @@ export class StockImageResolver {
   }
 
   @Query(() => MGqlStockImage, { nullable: true })
-  @UseGuards(ProtectedRouteGuard)
   public async getStockImage(
     @CurrentUser() userId: IJwtPayload,
     @Args('id') id: string
@@ -31,7 +31,6 @@ export class StockImageResolver {
   }
   
   @Mutation(() => MGqlStockImage)
-  @UseGuards(ProtectedRouteGuard)
   public async createStockImage(
     @CurrentUser() user: IJwtPayload,
     @Args('name') name: string,
@@ -41,7 +40,6 @@ export class StockImageResolver {
   }
   
   @Mutation(() => [MGqlStockImage])
-  @UseGuards(ProtectedRouteGuard)
   public async createMultipleStockImages(
     @CurrentUser() user: IJwtPayload,
     @Args('stockImages', { type: () => [GqlStockImageInput] }) stockImages: GqlStockImageInput[],
@@ -50,7 +48,6 @@ export class StockImageResolver {
   }
   
   @Mutation(() => MGqlStockImage)
-  @UseGuards(ProtectedRouteGuard)
   public async updateStockImage(
     @CurrentUser() user: IJwtPayload,
     @Args('stockImageId') stockImageId: string,
@@ -61,7 +58,6 @@ export class StockImageResolver {
   }
   
   @Mutation(() => MGqlStockImage)
-  @UseGuards(ProtectedRouteGuard)
   public async deleteStockImage(
     @CurrentUser() user: IJwtPayload,
     @Args('stockImageId') stockImageId: string,

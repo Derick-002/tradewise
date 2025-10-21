@@ -26,14 +26,35 @@ export class SanitizeInterceptor implements NestInterceptor {
 
   private sanitize(obj: any) {
     if (obj && typeof obj === 'object') {
-      return omit(obj, [
-        'password', 
+      const sanitized = omit(obj, [
+        'password',
         'resetPasswordToken',
         'resetPasswordExpires',
         'verifyAccountToken',
         'verifyAccountExpires',
+        "isVerified",
       ]);
+      
+      for (const key in sanitized) {
+        if (
+          sanitized[key] &&
+          typeof sanitized[key] === 'object' &&
+          !Array.isArray(sanitized[key])
+        ) {
+          sanitized[key] = omit(sanitized[key], [
+            'password',
+            'resetPasswordToken',
+            'resetPasswordExpires',
+            'verifyAccountToken',
+            'verifyAccountExpires',
+            "isVerified",
+          ]);
+        }
+      }
+
+      return sanitized;
     }
+
     return obj;
   }
 }
