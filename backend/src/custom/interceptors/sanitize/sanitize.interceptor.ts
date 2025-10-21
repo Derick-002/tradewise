@@ -32,7 +32,7 @@ export class SanitizeInterceptor implements NestInterceptor {
         'resetPasswordExpires',
         'verifyAccountToken',
         'verifyAccountExpires',
-        "isVerified",
+        // "isVerified",
       ]);
       
       for (const key in sanitized) {
@@ -47,7 +47,7 @@ export class SanitizeInterceptor implements NestInterceptor {
             'resetPasswordExpires',
             'verifyAccountToken',
             'verifyAccountExpires',
-            "isVerified",
+            // "isVerified",
           ]);
         }
       }

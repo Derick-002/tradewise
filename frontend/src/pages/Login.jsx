@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Signupimage from '../assets/Login.jpg';
 import { EyeOff, Eye, Sparkles, ArrowRight, Moon, Sun } from 'lucide-react';
@@ -11,15 +11,11 @@ import { loginUser } from '../features/auth/authThuck';
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, loading } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    if (user) navigate('/dashboard');
-  }, [user, navigate]);
 
   const handleChange = (e) => {
     setFormData({

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Loginimage from '../assets/Login.jpg';
 import { Eye, EyeOff, Sparkles, ArrowRight, Moon, Sun } from 'lucide-react';
@@ -23,15 +23,12 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [dark, setDark] = useState(false);
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) navigate('/dashboard');
-  }, [user, navigate]);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (e.target.name === 'confirmPassword') setConfirmPassword(e.target.value);
   };
+
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,6 +43,7 @@ const Signup = () => {
       return;
     }
 
+    setIsSigningUp(true);
     try {
       const resultAction = await dispatch(signupUser({
         enterpriseName: formData.enterpriseName,
@@ -54,8 +52,8 @@ const Signup = () => {
       }));
 
       if (signupUser.fulfilled.match(resultAction)) {
-        toast.success('Account created successfully! Redirecting...');
-        setTimeout(() => navigate('/dashboard'), 1000);
+        toast.success('Account created successfully! Starting onboarding...');
+        setTimeout(() => navigate('/land'), 1000);
       } else {
         const parsedError = handleError(resultAction.payload || new Error('Registration failed'));
         toast.error(parsedError.message);
@@ -63,6 +61,8 @@ const Signup = () => {
     } catch (err) {
       const parsedError = handleError(err);
       toast.error(parsedError.message);
+    } finally {
+      setIsSigningUp(false);
     }
   };
 

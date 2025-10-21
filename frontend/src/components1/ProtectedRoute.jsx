@@ -37,7 +37,8 @@ const ProtectedRoute = ({ children, requireAuth = true }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (!requireAuth && user) {
+  // Don't redirect if we're in a loading state (ongoing auth operation)
+  if (!requireAuth && user && !loading) {
     return <Navigate to="/dashboard" replace />;
   }
 
