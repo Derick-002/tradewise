@@ -71,4 +71,28 @@ export class ScheduleService {
 
         this.logger.log(`Sent ${sentNotifications} low stock notifications.`);
     }
+
+    @Interval(10 * 60 * 1_000)
+    public async clearOldForgotPasswordOtps() {
+        const cutoffDate = new Date(Date.now() - 10 * 60 * 1000); // 10 minutes ago
+
+        const deleted = await this.prismaService.mTrader.updateMany({
+            where: { resetPasswordExpires: { lt: cutoffDate } },
+            data: { resetPasswordExpires: null, resetPasswordToken: null },
+        });
+
+        this.logger.log(`Cleared ${deleted.count} old forgot password OTPs(Tokens).`);
+    }
+
+    @Interval(10 * 60 * 1_000)
+    public async clearOldVerifyEmailOtps() {
+        const cutoffDate = new Date(Date.now() - 10 * 60 * 1000); // 10 minutes ago
+
+        const deleted = await this.prismaService.mTrader.updateMany({
+            where: { verifyAccountExpires: { lt: cutoffDate } },
+            data: { verifyAccountExpires: null, verifyAccountToken: null },
+        });
+
+        this.logger.log(`Cleared ${deleted.count} old verify email OTPs(Tokens).`);
+    }
 }

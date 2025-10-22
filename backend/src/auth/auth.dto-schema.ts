@@ -54,9 +54,8 @@ export const verifyOtpSchema = Joi.object({
 }).xor('phone', 'email');
 
 export const forgetPasswordSchema = Joi.object({
-    email: Joi.string().email().optional(),
-    phone: Joi.string().optional(),
-}).xor('phone', 'email');
+    email: Joi.string().email().required()
+})
 
 export const resetPasswordSchema = Joi.object({
     otp: Joi.string().required(),

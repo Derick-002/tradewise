@@ -167,7 +167,7 @@ export class AuthService {
         });
 
         if (!user) 
-            throw new BadRequestException('User not found');
+            throw new BadRequestException('User with this email not found');
 
         let updateData: Partial<MTrader>;
         if (isPasswordReset) {
