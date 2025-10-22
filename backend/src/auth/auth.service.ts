@@ -60,7 +60,7 @@ export class AuthService {
             }
         });
         if (existingUser) 
-            throw new BadRequestException('User with this phone or email already exists');
+            throw new BadRequestException('User with this email already exists');
 
         const id = idTools.generateUlid();
         const pTId = generatePTId();
@@ -211,6 +211,14 @@ export class AuthService {
 
         if (!user) 
             throw new BadRequestException('Invalid or expired OTP');
+
+        // update the isVerified field
+        if(!isPasswordReset) {
+            await this.prismaService.mTrader.update({
+                where: { id: user.id },
+                data: { isVerified: true }
+            });
+        }
 
         if(!isPasswordReset)
             await this.clearOtp(user.id);

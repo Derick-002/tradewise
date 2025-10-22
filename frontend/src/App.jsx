@@ -21,13 +21,23 @@ function App() {
   return (
     <>
       <ToastContainer />
-
       <Router>
         <Routes>
             <Route path="/" element={ <Home />}></Route>
-            <Route path="/login" element={ <ProtectedRoute requireAuth={false}><Login /></ProtectedRoute> }></Route>
-            <Route path="/signup" element={ <ProtectedRoute requireAuth={false} isSignup={true}><Signup /></ProtectedRoute> }></Route>
-            <Route path='/email' element={<VerifyEmail />}></Route>
+            <Route path="/login" element={ 
+              <Login />
+            }></Route>
+
+            <Route path="/signup" element={
+              <Signup />
+            }></Route>
+
+            <Route path='/email' element={
+              <ProtectedRoute verified={false}>
+                <VerifyEmail />
+              </ProtectedRoute>
+            }></Route>
+
             <Route path='/dashboard' element={
               <ProtectedRoute>
                 <CartProvider>
@@ -35,15 +45,22 @@ function App() {
                 </CartProvider>
               </ProtectedRoute>
             }></Route>
+
             <Route path='/salesdata' element={<Form />}></Route>
             <Route path='/purchasedata' element={<Pform />}></Route>
-            <Route path='/land' element={<ProtectedRoute><Onboarding /></ProtectedRoute>}></Route>
+            <Route path='/land' element={
+              <ProtectedRoute>
+                <Onboarding />
+              </ProtectedRoute>
+            }></Route>
+
             <Route path='/forgotpassword' element={<Forgotpassword />}></Route>
+
             <Route path='/resetpassword' element={<Resetpassword />}></Route>
+
             <Route path='*' element={<NotFound />}></Route>
         </Routes>
       </Router>
-
     </>
   )
 }

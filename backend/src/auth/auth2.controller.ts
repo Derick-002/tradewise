@@ -5,17 +5,18 @@ import { forgetPasswordSchema, resetPasswordSchema, sendOtpSchema, verifyOtpSche
 import { EmailService } from 'src/communication/email/email.service';
 import { UnProtectedRouteGuard } from 'src/custom/guards/un-protected-route/un-protected-route.guard';
 import { SanitizeInterceptor } from 'src/custom/interceptors/sanitize/sanitize.interceptor';
+import { ProtectedRouteGuard } from 'src/custom/guards/protected-route/protected-route.guard';
 
 @UseInterceptors(SanitizeInterceptor)
-@UseGuards(UnProtectedRouteGuard)
 @Controller('auth')
 export class Auth2Controller {
     public constructor(
         private readonly authService: AuthService,
         private readonly emailService: EmailService
     ) {}
-
+    
     @Post('password/forget')
+    @UseGuards(UnProtectedRouteGuard)
     public async forgetPassword (
         @ValidatedBody(forgetPasswordSchema) dto: any
     ) {
@@ -29,21 +30,23 @@ export class Auth2Controller {
             throw new InternalServerErrorException('Failed to send email', error.message);
         }
     }
-
+    
     @Post('password/reset')
+    @UseGuards(UnProtectedRouteGuard)
     public async resetPassword (
         @ValidatedBody(resetPasswordSchema) dto: any
     ) {
         const user = await this.authService.verifyOtp({ email: dto.email, phone: dto.phone, otp: dto.otp, isPasswordReset: true });
         return await this.authService.resetPassword({password: dto.password }, user.id);
     }
-
+    
     @Post('account/send')
+    @UseGuards(ProtectedRouteGuard)
     public async sendOtp (
         @ValidatedBody(sendOtpSchema) dto: any
     ) {
         const otp = await this.authService.sendOtp({ email: dto.email, phone: dto.phone, isPasswordReset: false });
-
+        
         //sending email
         try {
             await this.emailService.verifyAccount(otp, dto.email);
@@ -52,8 +55,9 @@ export class Auth2Controller {
             throw new InternalServerErrorException('Failed to send email', error.message);
         }
     }
-
+    
     @Post('account/verify')
+    @UseGuards(ProtectedRouteGuard)
     public async verifyOtp (
         @ValidatedBody(verifyOtpSchema) dto: any
     ) {

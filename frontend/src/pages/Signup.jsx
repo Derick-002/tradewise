@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Loginimage from '../assets/Login.jpg';
 import { Eye, EyeOff, Sparkles, ArrowRight, Moon, Sun } from 'lucide-react';
@@ -12,6 +12,12 @@ const Signup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, loading } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const [formData, setFormData] = useState({
     enterpriseName: '',
@@ -53,14 +59,14 @@ const Signup = () => {
 
       if (signupUser.fulfilled.match(resultAction)) {
         toast.success('Account created successfully! Starting onboarding...');
-        setTimeout(() => navigate('/land'), 1000);
+        setTimeout(() => navigate('/email'), 1000);
       } else {
-        const parsedError = handleError(resultAction.payload || new Error('Registration failed'));
-        toast.error(parsedError.message);
+        const fullError = resultAction.payload;
+        toast.error(fullError);
       }
     } catch (err) {
-      const parsedError = handleError(err);
-      toast.error(parsedError.message);
+      const fullError = handleError(err);
+      toast.error(fullError.message);
     } finally {
       setIsSigningUp(false);
     }

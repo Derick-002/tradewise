@@ -11,7 +11,13 @@ import { loginUser } from '../features/auth/authThuck';
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading } = useSelector((state) => state.auth);
+  const { user, loading } = useSelector((state) => state.auth);
+
+  React.useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -39,12 +45,12 @@ const Login = () => {
         toast.success('Logged in successfully!');
         navigate('/dashboard');
       } else {
-        const parsedError = handleError(resultAction.payload || new Error('Login failed'));
-        toast.error(parsedError.message);
+        const fullError = resultAction.payload;
+        toast.error(fullError);
       }
     } catch (err) {
-      const parsedError = handleError(err);
-      toast.error(parsedError.message);
+      const fullError = handleError(err);
+      toast.error(fullError.message);
     }
   };
 

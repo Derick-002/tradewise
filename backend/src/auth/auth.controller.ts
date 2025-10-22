@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Res, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, InternalServerErrorException, Patch, Post, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { IJwtPayload } from './auth.types';
@@ -9,12 +9,14 @@ import { CurrentUser } from 'src/custom/decorators/currentUser.decorator';
 import { ProtectedRouteGuard } from 'src/custom/guards/protected-route/protected-route.guard';
 import { UnProtectedRouteGuard } from 'src/custom/guards/un-protected-route/un-protected-route.guard';
 import { SanitizeInterceptor } from 'src/custom/interceptors/sanitize/sanitize.interceptor';
+import { EmailService } from 'src/communication/email/email.service';
 
 @Controller('auth')
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly emailService: EmailService
     ) {}
     
     private time = 7 * 24 * 60 * 60 * 1000;
@@ -28,7 +30,7 @@ export class AuthController {
         return this.authService.getProfile(user.sub);
     }
     
-    @UseGuards(UnProtectedRouteGuard)
+    // @UseGuards(UnProtectedRouteGuard)
     @UseInterceptors(SanitizeInterceptor)
     @Post('register')
     public async register(
@@ -44,11 +46,19 @@ export class AuthController {
             sameSite: 'strict',
             maxAge: this.time // for 7 days
         });
-        
+
+        try {
+            // create the verify email token and send email
+            const otp = await this.authService.sendOtp({ email: output.newUser.email as string, isPasswordReset: false });
+            await this.emailService.verifyAccount(otp, output.newUser.email as string);
+        } catch (error) {
+            throw new InternalServerErrorException('Failed to send email', error.message);
+        }
+ 
         return output;
     }
     
-    @UseGuards(UnProtectedRouteGuard)
+    // @UseGuards(UnProtectedRouteGuard)
     @UseInterceptors(SanitizeInterceptor)
     @Post('login')
     public async login(

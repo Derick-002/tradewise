@@ -48,10 +48,9 @@ export const sendOtpSchema = Joi.object({
 }).xor('phone', 'email')
 
 export const verifyOtpSchema = Joi.object({
-    email: Joi.string().email().optional(),
-    phone: Joi.string().optional(),
+    email: Joi.string().email().required(),
     otp: Joi.string().required(),
-}).xor('phone', 'email');
+});
 
 export const forgetPasswordSchema = Joi.object({
     email: Joi.string().email().required()
@@ -59,7 +58,6 @@ export const forgetPasswordSchema = Joi.object({
 
 export const resetPasswordSchema = Joi.object({
     otp: Joi.string().required(),
-    email: Joi.string().email().optional(),
-    phone: Joi.string().optional(),
+    email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
-}).xor('phone', 'email');
+});

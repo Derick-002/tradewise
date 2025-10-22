@@ -23,6 +23,12 @@ const DashboardLayout = () => {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('dashboard');
   const { user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (!user) navigate("/login");
+    if (!user?.isVerified) navigate("/email");
+  }, [user, navigate]);
+
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(false);

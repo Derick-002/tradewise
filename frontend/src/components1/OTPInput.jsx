@@ -5,7 +5,7 @@ const OTPInput = ({ length = 6, onComplete, time }) => {
   const inputsRef = useRef([]);
 
     const handleChange = (e, idx) => {
-        if(time < 0) return;
+        if(time !== undefined && time < 0) return;
         
         const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""); 
         if (!val) return;
