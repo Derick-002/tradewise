@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 import { fetchUser } from "../features/auth/authThuck";
 import { CgSpinner } from "react-icons/cg";
 
-const ProtectedRoute = ({ children, requireAuth = true }) => {
+const ProtectedRoute = ({ children, requireAuth = true, verified = true }) => {
   const { user, loading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [fetched, setFetched] = useState(false);
