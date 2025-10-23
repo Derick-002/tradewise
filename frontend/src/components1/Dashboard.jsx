@@ -3,12 +3,17 @@ import { MdTrendingUp, MdInventory, MdShoppingCart, MdBusiness } from 'react-ico
 import { mockDashboardData, mockApiResponse} from '../__mock__';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import './Dashboard.css';
+import { useSelector } from 'react-redux';
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const { user } = useSelector((state) => state.auth);
+
+
+  
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
