@@ -1,4 +1,4 @@
-import { Body, Controller, Get, InternalServerErrorException, Patch, Post, Res, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, InternalServerErrorException, Patch, Post, Put, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { IJwtPayload } from './auth.types';
@@ -104,6 +104,14 @@ export class AuthController {
         @CurrentUser() user: IJwtPayload,
     ) {
         return this.authService.onboarding(dto, user.sub);
+    }
+
+    @Get('settings')
+    @UseGuards(ProtectedRouteGuard)
+    public async getSettings(
+        @CurrentUser() user: IJwtPayload,
+    ) {
+        return this.authService.getSettings(user.sub);
     }
 
     @Post('check')

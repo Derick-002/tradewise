@@ -293,6 +293,7 @@ export class AuthService {
     public async onboarding(details: TOnboardingDetails, id: string) {
         const { 
             enterpriseDescription, 
+            email,
             name,
             currency,
             businessType,
@@ -354,6 +355,10 @@ export class AuthService {
                 where: { traderId: id }, 
                 data: updateData
             });
+
+            if (email || name) {
+                await this.update({ email, enterpriseName: name }, id);
+            }
     
             return settings;
         } catch (error) {
@@ -365,4 +370,16 @@ export class AuthService {
             throw new InternalServerErrorException(error.message ?? "Something went wrong");
         }
     }
+
+    public async getSettings(traderId: string) {
+        try {            
+            const settings = await this.prismaService.mTraderSettings.findUnique({ 
+                where: { traderId } 
+            });
+    
+            return settings;
+        } catch (error) {
+            throw new InternalServerErrorException(error.message ?? "Something went wrong");
+        }
+    }  
 }

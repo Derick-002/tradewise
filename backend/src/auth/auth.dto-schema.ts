@@ -22,6 +22,7 @@ export const updateSchema = Joi.object({
 });
 
 export const onboardingSchema = Joi.object({
+    email: Joi.string().email().optional(),
     enterpriseDescription: Joi.string().optional(),
     name: Joi.string().optional(),
     currency: Joi.string().optional(),

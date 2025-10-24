@@ -27,6 +27,7 @@ export type TUpdateDetails = {
 }
 
 export type TOnboardingDetails = {
+    email?: string,
     enterpriseDescription?: string,
     name?: string,
     currency?: string,
