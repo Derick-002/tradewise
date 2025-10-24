@@ -16,13 +16,23 @@ import NotFound from "./pages/Notfound";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './components1/ProtectedRoute';
+import Analytics from "./pages/Analytics";
+import Stock from "./components1/Stock";
 
 function App() {
   return (
     <>
       <ToastContainer />
       <Router>
-        <Routes>
+        <Routes>            
+            <Route path='/dashboard' element={
+              <ProtectedRoute>
+                <CartProvider>
+                  <DashboardLayout />
+                </CartProvider>
+              </ProtectedRoute>
+            }></Route>
+
             <Route path="/" element={ <Home />}></Route>
             <Route path="/login" element={ 
               <Login />
@@ -38,16 +48,18 @@ function App() {
               </ProtectedRoute>
             }></Route>
 
-            <Route path='/dashboard' element={
+            <Route path='/salesdata' element={
               <ProtectedRoute>
-                <CartProvider>
-                  <DashboardLayout />
-                </CartProvider>
+                <Form />
               </ProtectedRoute>
             }></Route>
 
-            <Route path='/salesdata' element={<Form />}></Route>
-            <Route path='/purchasedata' element={<Pform />}></Route>
+            <Route path='/purchasedata' element={
+              <ProtectedRoute>
+                <Pform />
+              </ProtectedRoute>
+            }></Route>
+
             <Route path='/land' element={
               <ProtectedRoute>
                 <Onboarding />
@@ -55,9 +67,7 @@ function App() {
             }></Route>
 
             <Route path='/forgotpassword' element={<Forgotpassword />}></Route>
-
             <Route path='/resetpassword' element={<Resetpassword />}></Route>
-
             <Route path='*' element={<NotFound />}></Route>
         </Routes>
       </Router>

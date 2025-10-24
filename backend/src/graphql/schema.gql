@@ -78,6 +78,7 @@ input GqlFinancialCreateInput {
 }
 
 input GqlStockImageInput {
+  low_stock_quantity: Float
   name: String!
   unit: String!
 }
@@ -169,7 +170,9 @@ type MGqlStock {
 type MGqlStockImage {
   createdAt: DateTime!
   id: String!
+  low_stock_quantity: Float!
   name: String!
+  quantity: Float!
   stock: MGqlStock!
   stockId: String!
   unit: EUnitType!
@@ -234,12 +237,12 @@ type MGqlTransaction {
 type Mutation {
   createFinancial(amount: Float!, collateral: String, deadline: DateTime, description: String!, type: ENFinancialType!): MGqlFinancial!
   createMultipleStockImages(stockImages: [GqlStockImageInput!]!): [MGqlStockImage!]!
-  createStockImage(name: String!, unit: EUnitType!): MGqlStockImage!
+  createStockImage(low_stock_quantity: Float, name: String!, unit: EUnitType!): MGqlStockImage!
   createTransaction(description: String!, financialDetails: GqlFinancialCreateInput, products: [GqlTransactionCreateProductInput!]!, secondParty: String!, type: ENTransactionType!): MGqlTransaction!
   deleteStockImage(stockImageId: String!): MGqlStockImage!
   markAsPaidBack(financialId: String!): MGqlFinancial!
   markAsRead(id: String!): MGqlNotification!
-  updateStockImage(name: String, stockImageId: String!, unit: EUnitType): MGqlStockImage!
+  updateStockImage(low_stock_quantity: Float, name: String, stockImageId: String!, unit: EUnitType): MGqlStockImage!
 }
 
 type PeriodMap {

@@ -4,21 +4,21 @@ import { Navigate } from "react-router-dom";
 import { fetchUser } from "../features/auth/authThuck";
 import { CgSpinner } from "react-icons/cg";
 
-const ProtectedRoute = ({ children, requireAuth = true, verified = true }) => {
+const ProtectedRoute = ({ 
+    children, 
+    requireAuth = true,
+}) => {
   const { user, loading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [fetched, setFetched] = useState(false);
 
-  // Only fetch user if not present and not already loading
-  // This prevents the race condition after login/signup
   useEffect(() => {
-    if (user === null && !loading && !fetched) {
+    if (user === null && !fetched) {
       dispatch(fetchUser());
       setFetched(true);
     }
-  }, [user, loading, fetched, dispatch]);
+  }, [user, fetched, dispatch]);
 
-  // Show spinner while loading
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -32,14 +32,12 @@ const ProtectedRoute = ({ children, requireAuth = true, verified = true }) => {
     );
   }
 
-  // Redirect based on auth requirement
   if (requireAuth && !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Don't redirect if we're in a loading state (ongoing auth operation)
   if (!requireAuth && user && !loading) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={"/dashboard"} replace />;
   }
 
   return children;

@@ -274,7 +274,6 @@ const BuyingProducts = () => {
         isOpen={isPurchaseOrderFormOpen}
         onClose={() => setIsPurchaseOrderFormOpen(false)}
         onSave={(newPurchaseOrder) => {
-          console.log('New purchase order created:', newPurchaseOrder);
           // Here you would typically save to your backend
           setIsPurchaseOrderFormOpen(false);
         }}

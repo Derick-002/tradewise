@@ -4,15 +4,9 @@ import { MdClose, MdSave, MdInventory } from 'react-icons/md';
 const AddItemForm = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
-    category: '',
-    description: '',
-    purchasePrice: '',
-    sellingPrice: '',
-    initialQuantity: '',
-    supplier: '',
-    minStockLevel: ''
+    unit: '',
+    low_stock_quantity: '5'
   });
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,40 +20,18 @@ const AddItemForm = ({ isOpen, onClose, onSave }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-
-    const quantity = parseInt(formData.initialQuantity);
-    const minStockLevel = formData.minStockLevel ? parseInt(formData.minStockLevel) : 0;
-    const status = quantity <= 0 
-      ? 'Out of Stock' 
-      : quantity <= minStockLevel 
-        ? 'Low Stock' 
-        : 'In Stock';
-  
-    const numericData = {
-      ...formData,
+    const submitData = {
       name: formData.name.trim(),
-      category: formData.category,
-      description: formData.description.trim(),
-      purchasePrice: parseFloat(formData.purchasePrice),
-      sellingPrice: parseFloat(formData.sellingPrice), 
-      quantity: parseInt(formData.initialQuantity), 
-      minStockLevel: minStockLevel,
-      supplier: formData.supplier.trim(),
-      status: status 
+      unit: formData.unit,
+      low_stock_quantity: parseInt(formData.low_stock_quantity) || 5
     };
   
-    onSave(numericData);
-  
+    onSave(submitData);
 
     setFormData({
       name: '',
-      category: '',
-      description: '',
-      purchasePrice: '',
-      sellingPrice: '',
-      initialQuantity: '',
-      supplier: '',
-      minStockLevel: ''
+      unit: '',
+      low_stock_quantity: '5'
     });
     
     onClose();
@@ -106,115 +78,36 @@ const AddItemForm = ({ isOpen, onClose, onSave }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category *
+                Unit *
               </label>
               <select
-                name="category"
-                value={formData.category}
+                name="unit"
+                value={formData.unit}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
               >
-                <option value="">Select category</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Food">Food</option>
-                <option value="Construction">Construction</option>
-                <option value="Automotive">Automotive</option>
-                <option value="Other">Other</option>
+                <option value="">Select unit</option>
+                <option value="Piece">Piece</option>
+                <option value="Kilogram">Kilogram</option>
+                <option value="Litre">Litre</option>
               </select>
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="3"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
-                placeholder="Enter product description"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Purchase Price (Frw) *
+                Min Stock Level
               </label>
               <input
                 type="number"
-                name="purchasePrice"
-                value={formData.purchasePrice}
-                onChange={handleChange}
-                required
-                min="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Selling Price (Frw) *
-              </label>
-              <input
-                type="number"
-                name="sellingPrice"
-                value={formData.sellingPrice}
-                onChange={handleChange}
-                required
-                min="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Initial Quantity *
-              </label>
-              <input
-                type="number"
-                name="initialQuantity"
-                value={formData.initialQuantity}
-                onChange={handleChange}
-                required
-                min="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Supplier *
-              </label>
-              <input
-                type="text"
-                name="supplier"
-                value={formData.supplier}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
-                placeholder="Enter supplier name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Stock Level
-              </label>
-              <input
-                type="number"
-                name="minStockLevel"
-                value={formData.minStockLevel}
+                name="low_stock_quantity"
+                value={formData.low_stock_quantity}
                 onChange={handleChange}
                 min="0"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
-                placeholder="0"
+                placeholder="5"
               />
+              <p className="text-sm text-gray-500 mt-1">Alert when stock falls below this level (default: 5)</p>
             </div>
           </div>
 

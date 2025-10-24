@@ -21,7 +21,10 @@ import { logoutUser } from "../features/auth/authThuck";
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    // Load saved tab from localStorage, default to 'dashboard'
+    return localStorage.getItem('dashboardActiveTab') || 'dashboard';
+  });
   const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -50,6 +53,8 @@ const DashboardLayout = () => {
 
     try {
       await dispatch(logoutUser());
+      // Clear saved tab on logout
+      localStorage.removeItem('dashboardActiveTab');
       toast.success("Logged out successfully !!!");
       navigate("/login");
     } catch (error) {
@@ -74,6 +79,11 @@ const DashboardLayout = () => {
     }
   };
 
+  // Save activeTab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('dashboardActiveTab', activeTab);
+  }, [activeTab]);
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -93,18 +103,11 @@ const DashboardLayout = () => {
     setNotifications(prev => prev.filter(n => n.id !== notificationId));
   };
 
-  // Redirect if user is not logged in
-  useEffect(() => {
-    if (!user) {
-      navigate("/login");
-    }
-  }, [user, navigate]);
-
   return (
     <div className="flex h-screen bg-white font-sans text-gray-800 hide-scrollbar">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={true} closeOnClick pauseOnHover draggable theme="colored" />
 
-      {/* Sidebar */}
+      {/* Sidebar (navbar) */}
       <div className="w-64 shadow-2xl flex flex-col border-r border-gray-200 hide-scrollbar" style={{ backgroundColor: '#be741e' }}>
         <div className="p-6 border-b border-gray-200 flex items-center">
           <img src={logo} alt="TradeWise logo" className='w-[50px] h-[40px] rounded-full mr-1' />
@@ -146,8 +149,11 @@ const DashboardLayout = () => {
       <div className="flex-1 flex flex-col overflow-hidden bg-white text-gray-800 hide-scrollbar">
         <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white border-b border-gray-200 shadow-sm text-gray-800">
           <div className="text-2xl md:text-3xl font-semibold">
-            Welcome Back, {user?.company_name || 'User'}!
-            <p className="text-sm font-normal mt-1">Here’s your dashboard overview, be able to track you daily and monthly expense.</p>
+            Welcome Back your {"Enterprise " + user?.enterpriseName || 'Enterprise'}!
+            <p className="text-sm font-normal mt-1">
+              {/* Here's your dashboard overview, be able to track you daily and monthly expense. */}
+              Here's your business dashboard — track performance, monitor expenses, and stay on top of your goals.
+            </p>
           </div>
           <div className="relative flex flex-row items-center justify-center text-center">
             <button className='text-gray-600 mx-2 hover:text-black' onClick={() => setActiveTab('profile')}>

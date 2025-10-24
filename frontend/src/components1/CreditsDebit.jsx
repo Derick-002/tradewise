@@ -349,7 +349,6 @@ const CreditsDebit = () => {
         isOpen={isTransactionFormOpen}
         onClose={() => setIsTransactionFormOpen(false)}
         onSave={(newTransaction) => {
-          console.log('New transaction created:', newTransaction);
           // Here you would typically save to your backend
           setIsTransactionFormOpen(false);
         }}

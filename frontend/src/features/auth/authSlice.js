@@ -3,7 +3,7 @@ import { loginUser, logoutUser, signupUser, fetchUser } from "./authThuck";
 
 const initialState = {
   user: null,
-  loading: false,
+  loading: true, // Start with loading true to prevent flash redirects on refresh
   error: null,
 };
 

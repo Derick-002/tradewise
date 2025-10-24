@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "@nestjs/graphql";
+import { Field, Float, ObjectType } from "@nestjs/graphql";
 import { EUnitType } from "generated/prisma";
 import { MGqlStock } from "../circular-dependency";
 
@@ -9,6 +9,12 @@ export class MGqlStockImage {
 
     @Field()
     name: string;
+
+    @Field(() => Float)
+    quantity: number;
+
+    @Field(() => Float)
+    low_stock_quantity: number;
 
     @Field(() => EUnitType)
     unit: EUnitType;

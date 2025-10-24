@@ -53,7 +53,7 @@ const Home = () => {
     const handleContactUs = async (e) => {
         e.preventDefault();
         if(contactUsData.name === '' || contactUsData.email === '' || contactUsData.message === '') 
-            throw new Error('All fields are required');
+            return toast.error('All fields are required');
         
         try {
             setSending(true);
@@ -61,7 +61,6 @@ const Home = () => {
             
             toast.success("Message sent successfully");
         } catch (error) {
-            console.log(error);
             toast.error("Message not sent");
         } finally {
             setSending(false);
@@ -80,9 +79,7 @@ const Home = () => {
     },[]);
 
     return (
-        <>
-            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={true} closeOnClick pauseOnHover draggable theme="colored" />
-            
+        <>            
             <div className={styles.home_container}>
                 <div className={styles.home_navbar}>
                     <img src={logo} alt="logo"  className={styles.home_navbar_logo}/>
@@ -95,8 +92,8 @@ const Home = () => {
                     </div>
 
                     <div className={styles.home_navbar_buttons}>
-                        <button ><Link to='/Signup'>Signup</Link></button>
-                        <button ><Link to='/Login'>Login</Link></button>
+                        <button ><Link to='/signup'>Signup</Link></button>
+                        <button ><Link to='/login'>Login</Link></button>
                         <button className="bg-[#BE741E] text-white border-none flex items-center gap-2 px-4 py-2 rounded-lg">
                             <PiDownloadSimpleBold className="text-xl mr-1" />
                             Download App
@@ -236,7 +233,7 @@ const Home = () => {
                     <p className="text-white text-center text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
                         Discover valuable insights and solutions tailored to your trading needs. Contact us today to learn more about how we can streamline your journey and enhance your experience.
                     </p>
-                    <form className="w-full max-w-4xl mx-auto flex flex-col gap-8" onSubmit={handleContactUs}>
+                    <form className="w-full max-w-4xl mx-auto flex flex-col gap-8">
                         <div className="flex gap-8 flex-wrap">
                             <div className="flex-1 min-w-64">
                                 <label className="text-[#BE741E] text-xl mb-2 block">Name:</label>
@@ -261,13 +258,17 @@ const Home = () => {
                             </div>
                         </div>
                         <div className="flex justify-center mt-3">
-                            <button type="submit" className="bg-[#BE741E] text-white border-none rounded-full px-12 py-4 text-xl font-bold cursor-pointer shadow-lg hover:bg-[#a4641c] transition-colors">
+                            <button 
+                                type="submit" 
+                                className="bg-[#BE741E] text-white border-none rounded-full px-12 py-4 text-xl font-bold cursor-pointer shadow-lg hover:bg-[#a4641c] transition-colors"
+                                onClick={handleContactUs}
+                            >
                                 {sending ? 'Sending...' : 'Send'}
                             </button>
                         </div>
                     </form>
                 </div>
-       
+
                 <div className="bg-orange-50/80 px-48 py-12">
                     <div className="flex justify-center items-center flex-wrap">
                         <div className="text-center">

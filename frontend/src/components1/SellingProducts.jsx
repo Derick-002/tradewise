@@ -289,7 +289,6 @@ const SellingProducts = () => {
         isOpen={isSaleFormOpen}
         onClose={() => setIsSaleFormOpen(false)}
         onSave={(newSale) => {
-          console.log('New sale created:', newSale);
           setIsSaleFormOpen(false);
         }}
       />

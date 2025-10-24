@@ -42,9 +42,12 @@ export class StockService {
         });
     }
 
-    public async createStockImage(details: { name: string, unit: EUnitType }, traderId: string) {
+    public async createStockImage(
+        details: { name: string, unit: EUnitType, low_stock_quantity?: number }, 
+        traderId: string
+    ) {
         try {
-            const { name, unit } = details;
+            const { name, unit, low_stock_quantity } = details;
             const nameLower = name.toLowerCase();
 
             const stock = await this.prismaService.mStock.findUnique({
@@ -56,9 +59,10 @@ export class StockService {
 
             const stockImage = await this.prismaService.mStockImage.create({
                 data: {
+                    stockId: stock.id,
                     name: nameLower,
                     unit: unit,
-                    stockId: stock.id
+                    low_stock_quantity, // by default will be 5
                 },
                 include: {
                     stock: { include: { trader: true } }
@@ -76,7 +80,7 @@ export class StockService {
     }
 
     public async createMultipleStockImages(
-        details: { name: string; unit: EUnitType }[],
+        details: { name: string; unit: EUnitType, low_stock_quantity?: number }[],
         traderId: string
     ) {
         const stock = await this.prismaService.mStock.findUnique({
@@ -109,7 +113,10 @@ export class StockService {
         }
     }
 
-    public async updateStockImage(details: { name?: string, unit?: EUnitType}, traderId: string, imgId: string) {
+    public async updateStockImage(
+        details: { name?: string, unit?: EUnitType, low_stock_quantity?: number }, 
+        traderId: string, imgId: string
+    ) {
         try {
             const stockImage = await this.prismaService.mStockImage.update({
                 where: {
@@ -118,7 +125,8 @@ export class StockService {
                 },
                 data: {
                     name: details.name,
-                    unit: details.unit
+                    unit: details.unit,
+                    low_stock_quantity: details.low_stock_quantity,
                 },
                 include: {
                     stock: {

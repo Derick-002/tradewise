@@ -1,4 +1,4 @@
-import { Resolver, Mutation, Args, Query, ResolveField } from '@nestjs/graphql';
+import { Resolver, Mutation, Args, Query, ResolveField, Float } from '@nestjs/graphql';
 import { StockService } from './stock.service';
 import { MGqlStock, MGqlStockImage } from 'src/graphql/circular-dependency';
 import { CurrentUser } from 'src/custom/decorators/currentUser.decorator';
@@ -35,8 +35,9 @@ export class StockImageResolver {
     @CurrentUser() user: IJwtPayload,
     @Args('name') name: string,
     @Args('unit', { type: () => EUnitType }) unit: EUnitType,
+    @Args('low_stock_quantity', { type: () => Float, nullable: true }) low_stock_quantity?: number,
   ) {
-    return await this.stockService.createStockImage({ name, unit }, user.sub);
+    return await this.stockService.createStockImage({ name, unit, low_stock_quantity }, user.sub);
   }
   
   @Mutation(() => [MGqlStockImage])
@@ -53,8 +54,9 @@ export class StockImageResolver {
     @Args('stockImageId') stockImageId: string,
     @Args('name', { nullable: true }) name?: string,
     @Args('unit', { type: () => EUnitType, nullable: true }) unit?: EUnitType,
+    @Args('low_stock_quantity', { type: () => Float, nullable: true }) low_stock_quantity?: number,
   ) {
-    return await this.stockService.updateStockImage({ unit, name }, user.sub, stockImageId);
+    return await this.stockService.updateStockImage({ unit, name, low_stock_quantity }, user.sub, stockImageId);
   }
   
   @Mutation(() => MGqlStockImage)

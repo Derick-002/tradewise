@@ -113,6 +113,7 @@ model MStockImage {
     unit EUnitType @default(Piece)
     quantity Int @default(0) // total quantity of the product in stock
     notified Boolean @default(false)
+    low_stock_quantity Int @default(5) // the quantity to trigger low stock notification
     //timestamps
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

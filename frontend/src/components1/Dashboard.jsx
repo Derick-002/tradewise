@@ -9,11 +9,8 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   const { user } = useSelector((state) => state.auth);
 
-
-  
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {

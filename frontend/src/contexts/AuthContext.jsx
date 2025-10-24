@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const useSignup = async (userData) => {
     try {
       const response = await backendApi.post('/auth/register', userData);
-      console.log(response);
 
       if (response.status === 201 || response.status === 200) {
         setUser(response.data.user);
@@ -23,10 +22,7 @@ export const AuthProvider = ({ children }) => {
 
   const useLogin = async (userData) => {
     try {
-      console.log(userData);
       const response = await backendApi.post('/auth/login', userData);
-      console.log(response);
-
       if (response.status === 200 || response.status === 201) {
         setUser(response.data.user);
         return { success: true, response: response };
@@ -41,7 +37,6 @@ export const AuthProvider = ({ children }) => {
   const useLogout = async () => {
     try {
       const response = await backendApi.post('/auth/logout');
-      console.log(response);
       if (response.status === 200 || response.status === 201) {
         setUser(null);
         return { success: true, response: response };

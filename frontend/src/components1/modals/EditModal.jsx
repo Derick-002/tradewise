@@ -77,13 +77,15 @@ const EditModal = ({ isOpen, onClose, data, title, onSave, fields }) => {
                   <input
                     type={field.type || 'text'}
                     name={field.key}
-                    value={formData[field.key] || ''}
+                    value={formData[field.key] ?? ''}
                     onChange={handleChange}
                     required={field.required}
+                    disabled={field.disabled}
                     min={field.min}
                     max={field.max}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${field.disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     placeholder={field.placeholder}
+                    readOnly={field.disabled}
                   />
                 )}
               </div>

@@ -39,13 +39,10 @@ const VerifyEmail = () => {
         try {
             if (!user) return setError("Missing verification context");
             const { email } = user;
-
-            console.log("email and code: ", email, otpCode);
             await backendApi.post("/auth/account/verify", { otp: otpCode, email });
 
             navigate("/land");
         } catch (error) {
-            console.log(error);
             setError(error.response?.data?.message || error.message || "Invalid code");
         } finally {
             setLoading(false);
@@ -65,7 +62,6 @@ const VerifyEmail = () => {
             setOtpCode("");
             setResendCooldown(30); // 30 second cooldown
         } catch (error) {
-            console.log(error);
             setError(error.response?.data?.message || error.message || "Failed to resend code");
         } finally {
             setResendLoading(false);

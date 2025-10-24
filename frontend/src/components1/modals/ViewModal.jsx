@@ -21,7 +21,7 @@ const ViewModal = ({ isOpen, onClose, data, title, onEdit, onDelete, fields }) =
               )}
               {onDelete && (
                 <button
-                  onClick={() => onDelete(data._id || data.id)}
+                  onClick={() => onDelete(data)}
                   className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition duration-200"
                 >
                   <MdDelete className="text-xl" />

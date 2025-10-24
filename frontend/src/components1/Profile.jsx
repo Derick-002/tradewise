@@ -18,7 +18,6 @@ const Profile = () => {
         setProfileData(res.data);
       } catch (error) {
         const refinedError =handleError(error);
-        console.log(refinedError, error);
         toast.error(refinedError.message);
       } finally {
         setLoading(false);
@@ -169,7 +168,6 @@ const Profile = () => {
 
       setEditing(false);
       // hasChangesMemo will automatically update to false since formData now matches originalData
-      console.log('Profile saved successfully:', modifiedData);
       toast.success('Profile saved successfully!');
     } catch (error) {
       const refinedError = handleError(error);

@@ -52,18 +52,15 @@ const AfterSignup = () => {
     setError('');
     try {
       const res = await backendApi.post('/auth/onboarding', formData);
-      console.log(res.data);
       setSuccess('Profile saved successfully!');
       setTimeout(() => navigate('/dashboard'), 700);
     } catch (error) {
-      console.log(error);
       handleError(error);
     } finally {
       setLoading(false);
     }
     
     // setSuccess('Saving your profile...');
-    // console.log('AfterSignup form data:', formData);
     // setTimeout(() => {
     //   setLoading(false);
     //   setSuccess('Profile saved successfully!');
