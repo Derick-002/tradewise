@@ -110,3 +110,105 @@ export const createCategoryMutation = `
     }
   }
 `;
+
+// transaction queries
+export const createTransactionMutation = `
+  mutation CreateTransaction(
+    $type: ENTransactionType!
+    $products: [GqlTransactionCreateProductInput!]!
+    $description: String!
+    $secondParty: String!
+    $financialDetails: GqlFinancialCreateInput
+  ) {
+    createTransaction(
+      type: $type
+      products: $products
+      description: $description
+      secondParty: $secondParty
+      financialDetails: $financialDetails
+  ) {
+      id
+      type
+      description
+      secondParty
+      createdAt
+      updatedAt
+      stock {
+        id
+      }
+      products {
+        id
+        name
+        quantity
+        price
+        brand
+      }
+    }
+  }
+`;
+
+export const findallTransactionsQuery = `
+  query GetAllTransactions($type: ENTransactionType) {
+    transactions: getAllTransactions(type: $type) {
+      id
+      type
+      description
+      secondParty
+      createdAt
+      updatedAt
+      stockId
+      stock {
+        id
+        markAsBought
+        trader {
+          id
+          email
+          enterpriseName
+        }
+      }
+      products {
+        id
+        name
+        quantity
+        price
+      }
+      financials {
+        id
+        amount
+      }
+    }
+  }
+`;
+
+export const findATransactionQuery = `
+  query GetATransaction($transactionId: String!) {
+    transaction: getTransaction(transactionId: $transactionId) {
+      id
+      type
+      description
+      secondParty
+      createdAt
+      updatedAt
+      stockId
+      stock {
+        id
+        markAsBought
+        trader {
+          id
+          email
+          enterpriseName
+        }
+      }
+      products {
+        id
+        name
+        quantity
+        price
+      }
+      financials {
+        id
+        amount
+      }
+    }
+  }
+`;

@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdShoppingCart, MdAttachMoney, MdInventory, MdCheckCircle, MdSchedule, MdAccountBalance, MdTrendingUp } from 'react-icons/md';
 import PurchaseOrderForm from './forms/PurchaseOrderForm';
 
-
 const BuyingProducts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [isPurchaseOrderFormOpen, setIsPurchaseOrderFormOpen] = useState(false);
-  
 
     const purchases = [
     { 

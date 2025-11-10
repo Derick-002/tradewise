@@ -68,7 +68,6 @@ export class TransactionService {
     ) {
         const { type, description, secondParty, products } = details;
 
-
         const stock = await this.prismaService.mStock.findFirst({
             where: { traderId }
         });

@@ -72,18 +72,20 @@ const AfterSignup = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-brand-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden border border-white/40">
-        {/* Header */}
-        <div className="relative bg-gradient-to-r from-brand-500 to-amber-500 text-white text-center py-10 px-6">
-          <h1 className="text-3xl sm:text-4xl font-bold">Complete Your Business Profile</h1>
-          <p className="mt-2 text-base sm:text-lg opacity-90">Welcome to TradeWise! Let's set up your business profile.</p>
-          <div className="absolute left-6 right-6 -bottom-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-50 bg-gradient-to-r from-brand-500 to-amber-500 text-white text-center py-6 px-6 shadow-lg mb-6 rounded-t-3xl">
+          <h1 className="text-2xl sm:text-3xl font-bold">Complete Your Business Profile</h1>
+          <p className="mt-1 text-sm sm:text-base opacity-90">Welcome to TradeWise! Let's set up your business profile.</p>
+          <div className="mt-4 mx-auto max-w-md">
             <div className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
               <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progress}%` }}></div>
             </div>
-            <div className="mt-2 text-xs opacity-90">{progress}% complete</div>
+            <div className="mt-1 text-xs opacity-90">{progress}% complete</div>
           </div>
         </div>
+        
+        <div className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-b-3xl overflow-hidden border border-white/40 border-t-0">
 
         <div className="p-6 sm:p-8 space-y-6">
           {/* Success/Error Messages */}
@@ -162,6 +164,7 @@ const AfterSignup = () => {
               </button>
             </div>
           </form>
+        </div>
         </div>
       </div>
     </div>

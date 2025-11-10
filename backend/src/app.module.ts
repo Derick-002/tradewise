@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, UnauthorizedException } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import * as path from 'path';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -28,27 +28,29 @@ import { ScheduleModule } from './schedule/schedule.module';
                 signOptions: { expiresIn: '7d' }
             }),
         }),
-        GraphQLModule.forRoot<ApolloDriverConfig>({
+        GraphQLModule.forRootAsync<ApolloDriverConfig>({
             driver: ApolloDriver,
-            autoSchemaFile: path.join(process.cwd(), 'src/graphql/schema.gql'),
-            sortSchema: true,
-            context: ({ req, res }) => {
-                const jwtService = new JwtService();
-                const configService = new ConfigService();
-                const token = req.cookies?.accessToken || req.headers['authorization']?.split(' ')[1];
-
-                let user: IJwtPayload | undefined = undefined;
-                if (token) {
-                    try {
-                        user = jwtService.verify(token, { secret: configService.get('jwt_secret') }) as IJwtPayload;
-                    } catch (err) {
-                        user = undefined;
+            inject: [JwtService, ConfigService],
+            useFactory: (jwtService: JwtService, configService: ConfigService) => ({
+                autoSchemaFile: path.join(process.cwd(), 'src/graphql/schema.gql'),
+                sortSchema: true,
+                context: async ({ req, res }) => {
+                    const token = req.cookies?.accessToken || req.headers['authorization']?.split(' ')[1];
+                    let user: IJwtPayload | undefined = undefined;
+                    if (token) {
+                        try {
+                            user = jwtService.verify(token, { secret: configService.get('jwt_secret') }) as IJwtPayload;
+                        } catch (err) {
+                            user = undefined;
+                        }
                     }
-                }
-                
-                req.user = user;
-                return { req, res, user }; 
-            },
+                    // const business = await prismaService.mTraderSettings.findUnique({ where: { traderId:user?.sub } });
+                    // if (!business) throw new UnauthorizedException('Bussiness settings not found');
+
+                    req.user = user;
+                    return { req, res, user };
+                },
+            }),
         }),
         ThrottlerModule.forRoot([{
             ttl: 60,

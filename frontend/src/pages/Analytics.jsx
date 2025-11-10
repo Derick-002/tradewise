@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { mockAnalyticsData } from '../__mocks__/analyticsData';
+import { mockAnalyticsData } from '../__mock__/analyticsData';
 
 const Analytics = () => {
   const data = mockAnalyticsData;
