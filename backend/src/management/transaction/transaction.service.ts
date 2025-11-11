@@ -1,10 +1,11 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TTransactionCreateDetails } from './transaction.types';
 import { ENTransactionType, MProduct } from 'generated/prisma';
 import { generateUlid } from 'id-tools';
 import { TFinancialCreateDetails } from '../financials/financials.types';
 import { FinancialsService } from '../financials/financials.service';
+import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
 
 @Injectable()
 export class TransactionService {
@@ -81,9 +82,7 @@ export class TransactionService {
 
         for (const product of products) {
             const stockImg = await this.prismaService.mStockImage.findUnique({
-                where: {
-                name_stockId: { name: product.name, stockId: stock.id },
-                },
+                where: { name: product.name }
             });
 
             if (!stockImg) {
@@ -104,6 +103,33 @@ export class TransactionService {
 
         if (missingProducts.length > 0) {
             throw new BadRequestException(`The following products are missing stock images: ${missingProducts.join(", ")}. Please add them first.`);
+        }
+
+        for(const product of products) {
+            try {                
+                const stockImg = await this.prismaService.mStockImage.update({
+                    where: { name: product.name },
+                    data: 
+                        details.type === "Purchase"
+                            ? { quantity: { increment: product.quantity }}
+                            : { quantity: { decrement: product.quantity }},
+                    select: { id: true, quantity: true, name: true }
+                });
+            } catch (error: any) {
+                if(error instanceof PrismaClientKnownRequestError) {
+                    if(error.code == "P2025") {
+                        throw new BadRequestException(`Product ${product.name} don't have stock image`);
+                    }
+                } else {
+                    throw new InternalServerErrorException(`Failed to update ${product.name}`);
+                }
+            }
+        }
+
+        if(details.type == "Purchase") {
+
+        } else if(details.type == "Sale") {
+
         }
 
         const transaction = await this.prismaService.mTransaction.create({

@@ -109,7 +109,7 @@ enum EUnitType {
 
 model MStockImage {
     id String @id @default(ulid())
-    name String @db.VarChar(40)
+    name String @db.VarChar(40) @unique
     unit EUnitType @default(Piece)
     quantity Int @default(0) // total quantity of the product in stock
     notified Boolean @default(false)
@@ -121,7 +121,7 @@ model MStockImage {
     stockId String
     stock MStock @relation("stock_images", fields: [stockId], references: [id], onDelete: Cascade)
     products MProduct[] @relation("stock_images_products")
-    @@unique([name, stockId])
+    // @@unique([name, stockId])
 }
 
 model MProduct {

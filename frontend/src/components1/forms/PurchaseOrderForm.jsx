@@ -48,7 +48,7 @@ const PurchaseOrderForm = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     description: '',
     secondParty: '',
-    financialType: 'DEBIT',
+    financialType: 'Debit',
     amount: '',
     financialDescription: '',
     collateral: '',
@@ -161,14 +161,14 @@ const PurchaseOrderForm = ({ isOpen, onClose, onSave }) => {
         throw new Error(response.data.errors[0].message);
       }
 
-      console.log('Transaction created successfully:', response.data.data.createTransaction);
+      // console.log('Transaction created successfully:', response.data.data.createTransaction);
       toast.success('Purchase order created successfully!');
 
       // Reset form on success
       setFormData({
         description: '',
         secondParty: '',
-        financialType: 'DEBIT',
+        financialType: 'Debit',
         amount: '',
         financialDescription: '',
         collateral: '',
