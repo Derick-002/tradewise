@@ -157,15 +157,6 @@ export const findallTransactionsQuery = `
       createdAt
       updatedAt
       stockId
-      stock {
-        id
-        markAsBought
-        trader {
-          id
-          email
-          enterpriseName
-        }
-      }
       products {
         id
         name
@@ -212,3 +203,4 @@ export const findATransactionQuery = `
     }
   }
 `;
+

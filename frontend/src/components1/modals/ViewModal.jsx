@@ -40,12 +40,12 @@ const ViewModal = ({ isOpen, onClose, data, title, onEdit, onDelete, fields }) =
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {fields.map((field) => (
-              <div key={field.key}>
+              <div key={field.key} className={field.fullWidth ? 'md:col-span-2' : ''}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {field.label}
                 </label>
                 <div className="text-gray-900 font-medium">
-                  {field.render ? field.render(data[field.key]) : data[field.key]}
+                  {field.render ? field.render(data[field.key], data) : data[field.key]}
                 </div>
               </div>
             ))}
