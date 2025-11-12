@@ -1,89 +1,184 @@
-import React, { useState } from 'react';
-import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdAttachMoney, MdAccountBalance, MdTrendingUp, MdTrendingDown, MdCreditCard, MdAccountBalanceWallet, MdReceipt } from 'react-icons/md';
-import TransactionForm from './forms/TransactionForm';
+import React, { useState, useEffect } from 'react';
+import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdAttachMoney, MdAccountBalance, MdTrendingUp, MdTrendingDown, MdCreditCard, MdAccountBalanceWallet, MdReceipt, MdWarning, MdCheckCircle } from 'react-icons/md';
+import { toast } from 'react-toastify';
+import { useNavigate, useParams } from 'react-router-dom';
+import { backendGqlApi } from '../utils/axiosInstance';
+import { findAllFinancials, makeFinancialPaid, updateFinancials } from '../utils/gqlQuery';
+import FinancialForm from './forms/FinancialForm';
+import ViewFinancialModal from './modals/ViewFinancialModal';
 
 const CreditsDebit = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
-  
- 
-  const transactions = [
-    {
-      id: 1,
-      type: 'credit',
-      category: 'Sales Revenue',
-      description: 'Payment received for cement',
-      amount: 20000,
-      date: '2024-01-15',
-      time: '14:30',
-      status: 'completed',
-      reference: 'INV-001'
-    },
-    {
-      id: 2,
-      type: 'debit',
-      category: 'Purchase Expense',
-      description: 'Payment to Tech Solutions Ltd',
-      amount: 180000,
-      date: '2024-01-14',
-      time: '09:15',
-      status: 'completed',
-      reference: 'PO-001'
-    },
-    {
-      id: 3,
-      type: 'credit',
-      category: 'Sales Revenue',
-      description: 'Payment received for fer plan',
-      amount: 280000,
-      date: '2024-01-13',
-      time: '16:45',
-      status: 'pending',
-      reference: 'INV-002'
-    },
-    {
-      id: 4,
-      type: 'debit',
-      category: 'Operating Expense',
-      description: 'Office rent payment',
-      amount: 5000,
-      date: '2024-01-12',
-      time: '11:20',
-      status: 'completed',
-      reference: 'EXP-001'
-    },
-    {
-      id: 5,
-      type: 'credit',
-      category: 'Sales Revenue',
-      description: 'Payment received for biscuits',
-      amount: 34000,
-      date: '2024-01-11',
-      time: '13:10',
-      status: 'completed',
-      reference: 'INV-003'
-    },
-    {
-      id: 6,
-      type: 'debit',
-      category: 'Purchase Expense',
-      description: 'Payment to Gucci Ltd',
-      amount: 13000,
-      date: '2024-01-10',
-      time: '10:30',
-      status: 'completed',
-      reference: 'PO-002'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isFinancialFormOpen, setIsFinancialFormOpen] = useState(false);
+  const [financials, setFinancials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedFinancial, setSelectedFinancial] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
+  const navigate = useNavigate();
+  const { financialId } = useParams();
+
+  // Fetch financials from backend
+  const fetchFinancials = async () => {
+    try {
+      setLoading(true);
+      const response = await backendGqlApi.post('/graphql', {
+        query: findAllFinancials
+      });
+      
+      if (response.data.errors) {
+        return toast.error('Error fetching financials: ' + response.data.errors[0].message);
+      }
+
+      // Use backend data as-is, convert isPaidBack to boolean
+      const financialsWithPaidStatus = response.data.data.financials.map(financial => ({
+        ...financial,
+        paid: Boolean(financial.isPaidBack) // Convert 0/1 to false/true
+      }));
+      
+      setFinancials(financialsWithPaidStatus);
+    } catch (error) {
+      console.error('Error fetching financials:', error);
+      toast.error('Failed to fetch financial data');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const filteredTransactions = selectedFilter === 'all' 
-    ? transactions 
-    : transactions.filter(t => t.type === selectedFilter);
+  useEffect(() => {
+    fetchFinancials();
+  }, []);
 
-  const totalCredits = transactions.filter(t => t.type === 'credit').reduce((sum, t) => sum + t.amount, 0);
-  const totalDebits = transactions.filter(t => t.type === 'debit').reduce((sum, t) => sum + t.amount, 0);
-  const netBalance = totalCredits - totalDebits;
+  // Handle URL params - open modal if financialId is present
+  useEffect(() => {
+    if (financialId && financials.length > 0) {
+      const financial = financials.find(f => f.id === financialId);
+      if (financial) {
+        setSelectedFinancial(financial);
+        setIsViewModalOpen(true);
+      }
+    }
+  }, [financialId, financials]);
+
+  // Helper function to check if deadline is approaching (within 1 day)
+  const isDeadlineApproaching = (deadline) => {
+    const now = new Date();
+    const deadlineDate = new Date(deadline);
+    const timeDiff = deadlineDate.getTime() - now.getTime();
+    const daysDiff = timeDiff / (1000 * 3600 * 24);
+    return daysDiff <= 1 && daysDiff > 0;
+  };
+
+  // Helper function to check if deadline is overdue
+  const isOverdue = (deadline) => {
+    const now = new Date();
+    const deadlineDate = new Date(deadline);
+    return deadlineDate < now;
+  };
+
+  // Handle view financial
+  const handleViewFinancial = (financial) => {
+    setSelectedFinancial(financial);
+    setIsViewModalOpen(true);
+    navigate(`/financials/${financial.id}`);
+  };
+
+  // Handle close view modal
+  const handleCloseViewModal = () => {
+    setSelectedFinancial(null);
+    setIsViewModalOpen(false);
+    navigate('/dashboard');
+  };
+
+  // Handle mark as paid
+  const handleMarkAsPaid = async (financial) => {
+    if (!financial.paid) {
+      try {
+        const response = await backendGqlApi.post('/graphql', {
+          query: makeFinancialPaid,
+          variables: { financialId: financial.id }
+        });
+        
+        if (response.data.errors) {
+          console.log("Error", response);
+          toast.error('Error marking financial as paid: ' + response.data.errors[0].message);
+          return;
+        }
+        
+        toast.success('Financial marked as paid successfully!');
+        fetchFinancials(); // Refresh the data
+      } catch (error) {
+        console.error('Error marking financial as paid:', error);
+        toast.error('Failed to mark financial as paid');
+      }
+    }
+  };
+
+  // Handle update financial
+  const handleUpdateFinancial = async (updatedFinancial) => {
+    try {
+      const response = await backendGqlApi.post('/graphql', {
+        query: updateFinancials,
+        variables: {
+          financialId: updatedFinancial.id,
+          input: {
+            amount: updatedFinancial.amount,
+            description: updatedFinancial.description,
+            collateral: updatedFinancial.collateral,
+            deadline: updatedFinancial.deadline
+          }
+        }
+      });
+
+      if (response.data.errors) {
+        toast.error('Error updating financial: ' + response.data.errors[0].message);
+        return;
+      }
+      
+      toast.success('Financial updated successfully!');
+      fetchFinancials(); // Refresh the data
+    } catch (error) {
+      console.error('Error updating financial:', error);
+      toast.error('Failed to update financial');
+    }
+  };
+
+  const formatDeadline = (deadline) => {
+    return new Date(deadline).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const filteredTransactions = financials
+    .filter(t => {
+      // Filter by type
+      const typeMatch = selectedFilter === 'all' || t.type.toLowerCase() === selectedFilter;
+      // Filter by search term (description)
+      const searchMatch = searchTerm === '' || t.description.toLowerCase().includes(searchTerm.toLowerCase());
+      return typeMatch && searchMatch;
+    });
+
+  const visibleTransactions = filteredTransactions.slice(0, visibleCount);
+
+  // Infinite scroll handler
+  const handleScroll = () => {
+    const bottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 2;
+    if (bottom && visibleCount < filteredTransactions.length) {
+      setVisibleCount((prev) => prev + 10);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [visibleCount, filteredTransactions.length]);
+
+  const totalCredits = financials.filter(t => t.type === 'Credit').reduce((sum, t) => sum + t.amount, 0);
+  const totalDebits = financials.filter(t => t.type === 'Debit').reduce((sum, t) => sum + t.amount, 0);
+  const netBalance = totalDebits - totalCredits; // Debits (money owed to user) minus Credits (money user owes)
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -95,7 +190,11 @@ const CreditsDebit = () => {
   };
 
   const getTypeIcon = (type) => {
-    return type === 'credit' ? <MdTrendingUp className="text-green-600" /> : <MdTrendingDown className="text-red-600" />;
+    return type === 'Credit' ? (
+      <MdTrendingDown className="text-red-500 text-lg" />
+    ) : (
+      <MdTrendingUp className="text-green-500 text-lg" />
+    );
   };
 
   return (
@@ -107,11 +206,11 @@ const CreditsDebit = () => {
           <p className="text-gray-600">Track your credits, debits, and financial transactions</p>
         </div>
         <button 
-          onClick={() => setIsTransactionFormOpen(true)}
+          onClick={() => setIsFinancialFormOpen(true)}
           className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition duration-200 flex items-center gap-2"
         >
           <MdAdd className="text-xl" />
-          New Transaction
+          New Financial
         </button>
       </div>
 
@@ -123,7 +222,7 @@ const CreditsDebit = () => {
               <p className="text-white">Total Credits</p>
               <p className="text-3xl font-bold">{(totalCredits / 1000000).toFixed(1)}M</p>
             </div>
-            <div className="text-4xl opacity-80"><MdAccountBalance className="text-6xl" /></div>
+            <div className="text-4xl opacity-80"><MdTrendingDown className="text-6xl" /></div>
           </div>
         </div>
         <div className="bg-[#BE741E] text-white p-6 rounded-xl">
@@ -132,7 +231,7 @@ const CreditsDebit = () => {
               <p className="text-white">Total Debits</p>
               <p className="text-3xl font-bold">{(totalDebits / 1000000).toFixed(1)}M</p>
             </div>
-            <div className="text-4xl opacity-80"><MdTrendingDown className="text-6xl" /></div>
+            <div className="text-4xl opacity-80"><MdTrendingUp className="text-6xl" /></div>
           </div>
         </div>
         <div className="bg-[#BE741E] text-white p-6 rounded-xl">
@@ -150,161 +249,10 @@ const CreditsDebit = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white">Transactions</p>
-              <p className="text-3xl font-bold">{transactions.length}</p>
+              <p className="text-3xl font-bold">{financials.length}</p>
             </div>
             <div className="text-4xl opacity-80"><MdReceipt className="text-6xl" /></div>
           </div>
-        </div>
-      </div>
-
-      {/* Account Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Bank Account</h3>
-            <MdAccountBalance className="text-black text-2xl" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-2xl font-bold text-gray-800">{(netBalance * 0.7 / 1000000).toFixed(1)}M Frw</p>
-            <p className="text-sm text-gray-600">Available Balance</p>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-green-600">+12.5%</span>
-              <span className="text-gray-500">from last month</span>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Mobile Money</h3>
-            <MdAccountBalanceWallet className="text-black text-2xl" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-2xl font-bold text-gray-800">{(netBalance * 0.2 / 1000000).toFixed(1)}M Frw</p>
-            <p className="text-sm text-gray-600">Available Balance</p>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-green-500">+8.3%</span>
-              <span className="text-gray-500">from last month</span>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Cash</h3>
-            <MdCreditCard className="text-black text-2xl" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-2xl font-bold text-gray-800">{(netBalance * 0.1 / 1000000).toFixed(1)}M Frw</p>
-            <p className="text-sm text-gray-600">Available Balance</p>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-red-600">-2.1%</span>
-              <span className="text-gray-500">from last month</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
-            <input
-              type="text"
-              placeholder="Search transactions..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-            />
-          </div>
-          <select
-            value={selectedFilter}
-            onChange={(e) => setSelectedFilter(e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-          >
-            <option value="all">All Transactions</option>
-            <option value="credit">Credits Only</option>
-            <option value="debit">Debits Only</option>
-          </select>
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-          >
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="quarter">This Quarter</option>
-            <option value="year">This Year</option>
-          </select>
-          <button className="bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition duration-200 flex items-center gap-2">
-            <MdFilterList className="text-xl" />
-            More Filters
-          </button>
-        </div>
-      </div>
-
-      {/* Transactions Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800">Recent Transactions</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Type</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Category</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Description</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Amount</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Date & Time</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Status</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Reference</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredTransactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50 transition duration-150">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {getTypeIcon(transaction.type)}
-                      <span className={`text-sm font-medium capitalize ${
-                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {transaction.type}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 font-medium">{transaction.category}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{transaction.description}</td>
-                  <td className={`px-6 py-4 text-sm font-semibold ${
-                    transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {transaction.type === 'credit' ? '+' : '-'}{transaction.amount.toLocaleString()} Frw
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {new Date(transaction.date).toLocaleDateString()} at {transaction.time}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(transaction.status)}`}>
-                      {transaction.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 font-mono">{transaction.reference}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-800 p-1">
-                        <MdVisibility className="text-lg" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-800 p-1">
-                        <MdEdit className="text-lg" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-800 p-1">
-                        <MdDelete className="text-lg" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 
@@ -312,7 +260,10 @@ const CreditsDebit = () => {
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
+          <button 
+            onClick={() => setIsFinancialFormOpen(true)}
+            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200"
+          >
             <div className="bg-green-100 p-2 rounded-lg">
               <MdTrendingUp className="text-green-600 text-xl" />
             </div>
@@ -321,7 +272,10 @@ const CreditsDebit = () => {
               <p className="text-sm text-gray-600">Add incoming payment</p>
             </div>
           </button>
-          <button className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
+          <button 
+            onClick={() => setIsFinancialFormOpen(true)}
+            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200"
+          >
             <div className="bg-red-100 p-2 rounded-lg">
               <MdTrendingDown className="text-red-600 text-xl" />
             </div>
@@ -342,14 +296,166 @@ const CreditsDebit = () => {
         </div>
       </div>
 
-      {/* Transaction Form */}
-      <TransactionForm 
-        isOpen={isTransactionFormOpen}
-        onClose={() => setIsTransactionFormOpen(false)}
-        onSave={(newTransaction) => {
-          // Here you would typically save to your backend
-          setIsTransactionFormOpen(false);
+      {/* Search and Filters */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
+            <input
+              type="text"
+              placeholder="Search by description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+            />
+          </div>
+          <select
+            value={selectedFilter}
+            onChange={(e) => setSelectedFilter(e.target.value)}
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          >
+            <option value="all">All Transactions</option>
+            <option value="credit">Credits Only</option>
+            <option value="debit">Debits Only</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Transactions Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800">Recent Transactions</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Type</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Description</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Paid</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Deadline</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Collateral</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                    Loading financial data...
+                  </td>
+                </tr>
+              ) : filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                    No financial records found
+                  </td>
+                </tr>
+              ) : (
+                visibleTransactions.map((transaction) => (
+                  <tr key={transaction.id} className="hover:bg-gray-50 transition duration-150">
+                    {/* Type */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        {getTypeIcon(transaction.type)}
+                        <span className={`text-sm font-medium ${
+                          transaction.type === 'Credit' ? 'text-red-600' : 'text-green-600'
+                        }`}>
+                          {transaction.type}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Description */}
+                    <td className="px-6 py-4">
+                      <div className="max-w-xs">
+                        <p className="text-sm text-gray-900 font-medium truncate">{transaction.description}</p>
+                        <p className={`text-xs font-semibold ${
+                          transaction.type === 'Credit' ? 'text-red-600' : 'text-green-600'
+                        }`}>
+                          {transaction.type === 'Credit' ? '-' : '+'}{transaction.amount.toLocaleString()} Frw
+                        </p>
+                      </div>
+                    </td>
+                    
+                    {/* Paid Status */}
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
+                        transaction.paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {transaction.paid ? 'Paid' : 'Unpaid'}
+                      </span>
+                    </td>
+                    
+                    {/* Deadline with Warning */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">
+                          {formatDeadline(transaction.deadline)}
+                        </span>
+                        {!transaction.paid && isOverdue(transaction.deadline) && (
+                          <MdWarning className="text-red-500 text-lg" title="Overdue" />
+                        )}
+                        {!transaction.paid && isDeadlineApproaching(transaction.deadline) && (
+                          <MdWarning className="text-yellow-500 text-lg" title="Deadline approaching" />
+                        )}
+                      </div>
+                    </td>
+     
+                    {/* Collateral */}
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-600">
+                        {transaction.collateral || 'N/A'}
+                      </span>
+                    </td>
+                    
+                    {/* Actions */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => handleViewFinancial(transaction)}
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          title="View/Edit Details"
+                        >
+                          <MdEdit className="text-lg" />
+                        </button>
+                        {!transaction.paid && (
+                          <button 
+                            onClick={() => handleMarkAsPaid(transaction)}
+                            className="text-green-600 hover:text-green-800 p-1"
+                            title="Mark as Paid"
+                          >
+                            <MdCheckCircle className="text-lg" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Financial Form */}
+      <FinancialForm 
+        isOpen={isFinancialFormOpen}
+        onClose={() => setIsFinancialFormOpen(false)}
+        onSave={(newFinancial) => {
+          // Refresh the financials list after adding new one
+          fetchFinancials();
+          setIsFinancialFormOpen(false);
         }}
+      />
+      
+      {/* View Financial Modal */}
+      <ViewFinancialModal 
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
+        financial={selectedFinancial}
+        onMarkAsPaid={handleMarkAsPaid}
+        onUpdateFinancial={handleUpdateFinancial}
       />
     </div>
   );

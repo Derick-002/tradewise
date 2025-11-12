@@ -77,6 +77,13 @@ input GqlFinancialCreateInput {
   type: ENFinancialType!
 }
 
+input GqlFinancialUpdateInput {
+  amount: Float
+  collateral: String
+  deadline: DateTime
+  description: String
+}
+
 input GqlStockImageInput {
   low_stock_quantity: Float
   name: String!
@@ -242,6 +249,7 @@ type Mutation {
   deleteStockImage(stockImageId: String!): MGqlStockImage!
   markAsPaidBack(financialId: String!): MGqlFinancial!
   markAsRead(id: String!): MGqlNotification!
+  updateFinancial(financialId: String!, input: GqlFinancialUpdateInput!): MGqlFinancial!
   updateStockImage(low_stock_quantity: Float, name: String, stockImageId: String!, unit: EUnitType): MGqlStockImage!
 }
 

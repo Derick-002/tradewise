@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { TFinancialCreateDetails } from './financials.types';
+import { GqlFinancialUpdateInput, TFinancialCreateDetails } from './financials.types';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { generateUlid } from 'id-tools'
 
@@ -9,12 +9,17 @@ export class FinancialsService {
     private readonly prismaService: PrismaService
   ) {}
 
+  public async findStock(traderId: string) {
+    const stock = await this.prismaService.mStock.findUnique({ where: { traderId } });
+    if (!stock) 
+      throw new BadRequestException("Stock not found for trader");
+
+    return stock;
+  }
+
   public async create(details: TFinancialCreateDetails, traderId: string) {
     const { type, amount, description, collateral, deadline } = details;
-    const stock = await this.prismaService.mStock.findUnique({
-      where: { traderId },
-    });
-    if (!stock) throw new BadRequestException("Stock not found for trader");
+    const stock = await this.findStock(traderId);
     
     const newFinancial = await this.prismaService.mFinancial.create({
       data: {
@@ -36,10 +41,7 @@ export class FinancialsService {
   }
 
   public async getFinancials(traderId: string) {
-    const stock = await this.prismaService.mStock.findUnique({
-      where: { traderId },
-    });
-    if (!stock) throw new BadRequestException("Stock not found for trader");
+    const stock = await this.findStock(traderId);
     
     const financials = await this.prismaService.mFinancial.findMany({
       where: { stockId: stock.id },
@@ -56,10 +58,7 @@ export class FinancialsService {
   }
 
   public async getFinancial(financialId: string, traderId: string) {
-    const stock = await this.prismaService.mStock.findUnique({
-      where: { traderId }
-    });
-    if (!stock) throw new BadRequestException("Stock not found for trader");
+    const stock = await this.findStock(traderId);
 
     const financial = await this.prismaService.mFinancial.findFirst({
       where: { id: financialId, stockId: stock.id },      
@@ -76,16 +75,37 @@ export class FinancialsService {
   }
 
   public async markAsPaidBack(financialId: string, traderId: string) {
-    const stock = await this.prismaService.mStock.findUnique({
-      where: { traderId }
-    });
-    if (!stock) throw new BadRequestException("Stock not found for trader");
+    const stock = await this.findStock(traderId);
 
     const financial = await this.prismaService.mFinancial.update({
       where: { id: financialId, stockId: stock.id },
       data: { isPaidBack: true }
     });
+  
     if (!financial) throw new BadRequestException("Financial not found");
+
+    return financial;
+  }
+
+  public async updateFinancial(financialId: string, input: GqlFinancialUpdateInput, traderId: string) {
+    const stock = await this.findStock(traderId);
+    const { amount, deadline, description, collateral } = input;
+
+    const updateData: any = {};
+    if (input.amount !== undefined) updateData.amount = input.amount;
+    if (input.deadline !== undefined) updateData.deadline = input.deadline;
+    if (input.description !== undefined) updateData.description = input.description;
+    if (input.collateral !== undefined) updateData.collateral = input.collateral;
+
+    const financial = await this.prismaService.mFinancial.update({
+      where: { id: financialId, stockId: stock.id },
+      data: updateData,
+      include: {
+        stock: { include: { trader: true } },
+        transaction: true,
+      }
+    });
+    if (!financial) throw new BadRequestException('Financial not found or not owned by trader');
 
     return financial;
   }

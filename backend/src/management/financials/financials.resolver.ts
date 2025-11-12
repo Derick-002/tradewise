@@ -7,6 +7,7 @@ import { GqlTransactionCreateProductInput } from '../transaction/transaction.typ
 import { ENFinancialType } from 'generated/prisma';
 import { UseGuards } from '@nestjs/common';
 import { VerifiedGuard } from 'src/custom/guards/verified/verified.guard';
+import { GqlFinancialUpdateInput } from './financials.types';
 
 @UseGuards(VerifiedGuard)
 @Resolver()
@@ -44,5 +45,14 @@ export class FinancialsResolver {
     @Args('financialId') financialId: string,
   ) {
     return this.financialsService.markAsPaidBack(financialId, user.sub);
+  }
+
+  @Mutation(() => MGqlFinancial)
+  public updateFinancial(
+    @CurrentUser() user: IJwtPayload,
+    @Args('financialId') financialId: string,
+    @Args('input') input: GqlFinancialUpdateInput,
+  ) {
+    return this.financialsService.updateFinancial(financialId, input, user.sub);
   }
 }

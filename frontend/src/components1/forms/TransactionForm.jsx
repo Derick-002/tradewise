@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { MdClose, MdSave, MdAccountBalance } from 'react-icons/md';
+import { toast } from 'react-toastify';
+import { backendGqlApi } from '../../utils/axiosInstance';
+import { createFinancial } from '../../utils/gqlQuery';
 
 const TransactionForm = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -21,26 +24,62 @@ const TransactionForm = ({ isOpen, onClose, onSave }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const transaction = {
-      ...formData,
-      id: Date.now(),
-      time: new Date().toLocaleTimeString(),
-      status: 'completed'
-    };
-    onSave(transaction);
-    setFormData({
-      type: 'credit',
-      category: '',
-      description: '',
-      amount: '',
-      date: new Date().toISOString().split('T')[0],
-      paymentMethod: 'Cash',
-      reference: '',
-      notes: ''
-    });
-    onClose();
+    
+    try {
+      // Create the financial object for GraphQL
+      const financial = {
+        type: formData.type.toUpperCase(), // Convert to uppercase for GraphQL enum
+        amount: parseFloat(formData.amount),
+        description: `${formData.category}: ${formData.description}`,
+        collateral: formData.notes || null,
+        deadline: new Date(formData.date + 'T23:59:59').toISOString()
+      };
+      
+      // Make the GraphQL API call
+      const response = await backendGqlApi.post('/graphql', {
+        query: createFinancial,
+        variables: financial
+      });
+      
+      if (response.data.errors) {
+        toast.error('Error creating transaction: ' + response.data.errors[0].message);
+        return;
+      }
+      
+      // Success
+      toast.success(`${formData.type} transaction created successfully!`);
+      console.log('Transaction Data:', response.data.data.financial);
+      
+      // Create transaction object for backward compatibility
+      const transaction = {
+        ...formData,
+        id: response.data.data.financial.id,
+        time: new Date().toLocaleTimeString(),
+        status: 'completed',
+        serverResponse: response.data.data.financial
+      };
+      
+      onSave(transaction);
+      
+      // Reset form
+      setFormData({
+        type: 'credit',
+        category: '',
+        description: '',
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+        paymentMethod: 'Cash',
+        reference: '',
+        notes: ''
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      toast.error('Failed to create transaction. Please try again.');
+    }
   };
 
   if (!isOpen) return null;
@@ -78,8 +117,8 @@ const TransactionForm = ({ isOpen, onClose, onSave }) => {
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="credit">Credit (Income)</option>
-                <option value="debit">Debit (Expense)</option>
+                <option value="Credit">Credit (Income)</option>
+                <option value="Debit">Debit (Expense)</option>
               </select>
             </div>
 

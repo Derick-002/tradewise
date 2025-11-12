@@ -205,3 +205,125 @@ export const findATransactionQuery = `
 `;
 
 // financial queries
+export const createFinancial = `
+  mutation CreateFinancial(
+    $type: ENFinancialType!
+    $amount: Float!
+    $description: String!
+    $collateral: String
+    $deadline: DateTime
+) {
+    financial: createFinancial(
+      type: $type
+      amount: $amount
+      description: $description
+      collateral: $collateral
+      deadline: $deadline
+    ) 
+    {
+      id
+      type
+      amount
+      collateral
+      deadline
+      description
+      stock {
+          id
+          trader {
+              id
+              enterpriseName
+          }
+      }
+      transaction {
+          id
+          type
+          description
+      }
+    }
+  }
+`;
+
+export const findAllFinancials = `
+  query GetFinancials {
+      financials: getFinancials {
+          id
+          type
+          amount
+          collateral
+          isPaidBack
+          deadline
+          description
+          stock {
+              id
+              trader {
+                  id
+                  enterpriseName
+              }
+          }
+          transaction {
+              id
+              type
+              description
+          }
+      }
+  }
+`;
+
+export const findAFinancials = `
+  query GetFinancials($id: String!) {
+      financials: getFinancial(financialId: $id) {
+          id
+          type
+          amount
+          collateral
+          deadline
+          description
+          isPaidBack
+          stock {
+              id
+              trader {
+                  id
+                  enterpriseName
+              }
+          }
+          transaction {
+              id
+              type
+              description
+          }
+      }
+  }
+`;
+
+export const updateFinancials = `
+  mutation UpdateFinancial(
+    $financialId: String!
+    $input: GqlFinancialUpdateInput!
+  ) {
+    updateFinancial(financialId: $financialId, input: $input) {
+      id
+      type
+      amount
+      description
+      collateral
+      deadline
+      isPaidBack
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const makeFinancialPaid = `
+  mutation MarkAsPaidBack($financialId: String!) {
+    markAsPaidBack(financialId: $financialId) {
+      id
+      isPaidBack
+      description
+      amount
+      type
+      createdAt
+      updatedAt
+    }
+  }
+`;

@@ -41,6 +41,14 @@ function App() {
               </ProtectedRoute>
             }></Route>
 
+            <Route path='/financials/:financialId' element={
+              <ProtectedRoute>
+                <CartProvider>
+                  <DashboardLayout />
+                </CartProvider>
+              </ProtectedRoute>
+            }></Route>
+
             <Route path="/" element={ <Home />}></Route>
             <Route path="/login" element={ 
               <Login />

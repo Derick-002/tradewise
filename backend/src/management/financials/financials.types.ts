@@ -26,3 +26,18 @@ export class GqlFinancialCreateInput {
     @Field({ nullable: true })
     collateral?: string;
 }
+
+@InputType()
+export class GqlFinancialUpdateInput {
+    @Field(() => Float, { nullable: true })
+    amount?: number;
+    
+    @Field(() => Date, { nullable: true })
+    deadline?: Date;
+    
+    @Field({ nullable: true, })
+    description?: string;
+    
+    @Field({ nullable: true })
+    collateral?: string;
+}
