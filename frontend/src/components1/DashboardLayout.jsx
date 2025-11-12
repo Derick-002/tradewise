@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { MdDashboard, MdStorage, MdHistory, MdShoppingBag, MdAttachMoney, MdNotifications, MdCreditCard, MdLogout } from "react-icons/md";
 import logo from '../assets/logo.png';
 import Dashboard from './Dashboard';
@@ -13,19 +13,74 @@ import Profile from './Profile';
 import '../index.css';
 import { mockNotifications, mockApiResponse } from '../__mock__';
 import { CgProfile } from "react-icons/cg";
+
 import { toast, ToastContainer } from 'react-toastify';
 import { handleError } from '../utils/handleError';
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../features/auth/authThuck";
+import { backendGqlApi } from '../utils/axiosInstance';
+import { findallTransactionsQuery, findATransactionQuery } from '../utils/gqlQuery';
+import TransactionSkeleton from './skeletons/TransactionSkeleton';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const params = useParams();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState(() => {
     // Load saved tab from localStorage, default to 'dashboard'
     return localStorage.getItem('dashboardActiveTab') || 'dashboard';
   });
   const { user } = useSelector((state) => state.auth);
+
+  // Handle transaction URL routing with backend search
+  useEffect(() => {
+    if (params.id && location.pathname.includes('/transaction/')) {
+      // Search for specific transaction in backend
+      const searchTransaction = async () => {
+        try {
+          setIsSearchingTransaction(true);
+          
+          // First try to find the specific transaction by ID
+          const response = await backendGqlApi.post('/graphql', {
+            query: findATransactionQuery,
+            variables: { transactionId: params.id }
+          });
+
+          if (response.data.data?.transaction) {
+            const transaction = response.data.data.transaction;
+            
+            // Set the correct tab based on transaction type
+            if (transaction.type === 'Sale') {
+              setActiveTab('selling');
+            } else if (transaction.type === 'Purchase') {
+              setActiveTab('buying');
+            } else {
+              // Default to buying if unknown type
+              setActiveTab('buying');
+            }
+            
+            // toast.success(`Transaction found: ${transaction.type} transaction`);
+          } else {
+            // Transaction not found
+            toast.error(`Transaction ${params.id} not found`);
+            navigate('/dashboard');
+          }
+        } catch (error) {
+          console.error('Error searching for transaction:', error);
+          toast.error(`Error finding transaction: ${error.message}`);
+          // Default to buying if error
+          setActiveTab('buying');
+        } finally {
+          setIsSearchingTransaction(false);
+        }
+      };
+
+      searchTransaction();
+    } else {
+      setIsSearchingTransaction(false);
+    }
+  }, [params.id, location.pathname, navigate]);
 
   useEffect(() => {
     if (!user) navigate("/login");
@@ -35,6 +90,7 @@ const DashboardLayout = () => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSearchingTransaction, setIsSearchingTransaction] = useState(false);
 
   const tabs = [
     { id: 'dashboard', name: 'Dashboard', icon: <MdDashboard className="mr-4 text-xl text-white" /> },
@@ -66,6 +122,11 @@ const DashboardLayout = () => {
   };
 
   const renderContent = () => {
+    // Show skeleton while searching for transaction
+    if (isSearchingTransaction) {
+      return <TransactionSkeleton />;
+    }
+
     switch (activeTab) {
       case 'dashboard': return <Dashboard />;
       case 'stock': return <Stock />;

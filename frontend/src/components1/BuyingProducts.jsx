@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdShoppingCart, MdAttachMoney, MdInventory, MdCheckCircle, MdSchedule, MdAccountBalance, MdTrendingUp } from 'react-icons/md';
 import PurchaseOrderForm from './forms/PurchaseOrderForm';
 import { backendGqlApi } from '../utils/axiosInstance';
-import { findallTransactionsQuery } from '../utils/gqlQuery';
+import { findallTransactionsQuery, findATransactionQuery } from '../utils/gqlQuery';
 import { toast } from 'react-toastify';
 import ViewModal from './modals/ViewModal';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 const BuyingProducts = () => {
+  const navigate = useNavigate();
+  const params = useParams();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [isPurchaseOrderFormOpen, setIsPurchaseOrderFormOpen] = useState(false);
   const [purchases, setPurchases] = useState([]);
@@ -57,6 +61,69 @@ const BuyingProducts = () => {
 
     fetchPurchases();
   }, []);
+
+  // Handle URL parameters for transaction viewing
+  useEffect(() => {
+    if (params.id && location.pathname.includes('/transaction/')) {
+      // First try to find the transaction in local purchases data
+      const localTransaction = purchases.find(purchase => purchase.id === params.id);
+      
+      if (localTransaction) {
+        setSelectedPurchase(localTransaction);
+        setIsViewModalOpen(true);
+      } else if (purchases.length > 0) {
+        // If purchases are loaded but transaction not found locally, search backend
+        const searchBackendTransaction = async () => {
+          try {
+            const response = await backendGqlApi.post('/graphql', {
+              query: findATransactionQuery,
+              variables: { transactionId: params.id }
+            });
+
+            if (response.data.data?.transaction) {
+              const transaction = response.data.data.transaction;
+              
+              // Transform backend transaction to match local format
+              const transformedTransaction = {
+                id: transaction.id,
+                product: transaction.products.map(p => p.name).join(', '),
+                products: transaction.products || [],
+                supplier: transaction.secondParty,
+                quantity: transaction.products.reduce((sum, p) => sum + p.quantity, 0),
+                unitPrice: transaction.products.length > 0 ? transaction.products[0].price : 0,
+                totalPrice: transaction.products.reduce((sum, p) => sum + (p.price * p.quantity), 0),
+                date: new Date(transaction.createdAt).toISOString().split('T')[0],
+                paymentMethod: transaction.financials && transaction.financials.length > 0 ? 'Recorded' : 'Not Recorded'
+              };
+
+              setSelectedPurchase(transformedTransaction);
+              setIsViewModalOpen(true);
+            }
+          } catch (error) {
+            console.error('Error fetching transaction from backend:', error);
+          }
+        };
+
+        searchBackendTransaction();
+      }
+    } else {
+      // Close modal if not on transaction URL
+      setIsViewModalOpen(false);
+      setSelectedPurchase(null);
+    }
+  }, [params.id, location.pathname, purchases]);
+
+  // Handle modal close - navigate back to dashboard
+  const handleModalClose = () => {
+    setIsViewModalOpen(false);
+    setSelectedPurchase(null);
+    navigate('/dashboard');
+  };
+
+  // Handle view transaction - navigate to transaction URL
+  const handleViewTransaction = (purchase) => {
+    navigate(`/transaction/${purchase.id}`);
+  };
 
   const filteredPurchases = purchases.filter(purchase => {
     const matchesSearch = purchase.product?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -229,10 +296,7 @@ const BuyingProducts = () => {
                   <td className="px-6 py-4 text-sm text-gray-600">{purchase.paymentMethod}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-800 p-1" onClick={() => {
-                        setSelectedPurchase(purchase);
-                        setIsViewModalOpen(true);
-                      }}>
+                      <button className="text-blue-600 hover:text-blue-800 p-1" onClick={() => handleViewTransaction(purchase)}>
                         <MdVisibility className="text-lg" />
                       </button>
                     </div>
@@ -263,7 +327,7 @@ const BuyingProducts = () => {
       {/* View Transaction Modal */}
       <ViewModal
         isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
+        onClose={handleModalClose}
         data={selectedPurchase}
         title="Purchase Details"
         fields={[

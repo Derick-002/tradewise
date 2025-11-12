@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdAttachMoney, MdAccountBalance, MdTrendingUp, MdTrendingDown, MdCreditCard, MdAccountBalanceWallet, MdReceipt } from 'react-icons/md';
 import TransactionForm from './forms/TransactionForm';
 
-
-
 const CreditsDebit = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('month');
