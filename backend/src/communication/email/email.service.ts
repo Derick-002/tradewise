@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common'; 
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import { IEmailEnvs, IEmailOptions } from './email.types';
@@ -24,9 +24,39 @@ export class EmailService {
     public async forgetPassword(otp: string, email: string) {
         const option: IEmailOptions = {
             to: email,
-            subject: "Reset Password",
+            subject: "Reset Your TradeWise Password",
             text: `Your OTP is ${otp}`,
-            html: `<p>Your OTP is ${otp}</p>`
+            html: `
+            <!DOCTYPE html>
+            <html>
+                <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <title>Reset Your Password</title>
+                </head>
+                <body style="background-color:#fff4e6; font-family:Arial, sans-serif; color:#333; margin:0; padding:0;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                    <td align="center">
+                        <table width="480" cellpadding="20" cellspacing="0" style="background:#ffffff; border-radius:12px; margin:40px 10px; max-width:480px;">
+                        <tr>
+                            <td align="center">
+                            <h2 style="color:#c46b09;">Reset Your Password</h2>
+                            <p style="font-size:16px;">Use the OTP below to reset your TradeWise account password:</p>
+                            <div style="font-size:24px; font-weight:bold; color:#d88310; background:#fff4e6; padding:12px 24px; border-radius:8px; display:inline-block; margin:10px 0;">
+                                ${otp}
+                            </div>
+                            <p style="font-size:14px; color:#666;">If you didn’t request a password reset, please ignore this email.</p>
+                            </td>
+                        </tr>
+                        </table>
+                        <p style="font-size:12px; color:#999; margin-top:16px;">© 2025 TradeWise. Secure trading made simple.</p>
+                    </td>
+                    </tr>
+                </table>
+                </body>
+            </html>
+            `,
         };
         await this.sendEmail(option);
     }
@@ -34,14 +64,43 @@ export class EmailService {
     public async verifyAccount(otp: string, email: string) {
         const option: IEmailOptions = {
             to: email,
-            subject: "Verify Account",
+            subject: "Verify Your TradeWise Account",
             text: `Your OTP is ${otp}`,
-            html: `<p>Your OTP is ${otp}</p>`
+            html: `
+            <!DOCTYPE html>
+            <html>
+                <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <title>Verify Your TradeWise Account</title>
+                </head>
+                <body style="background-color:#fff4e6; font-family:Arial, sans-serif; color:#333; margin:0; padding:0;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                    <td align="center">
+                        <table width="480" cellpadding="20" cellspacing="0" style="background:#ffffff; border-radius:12px; margin:40px 10px; max-width:480px;">
+                        <tr>
+                            <td align="center">
+                            <h2 style="color:#c46b09;">Welcome to <span style="color:#d88310;">TradeWise</span></h2>
+                            <p style="font-size:16px;">Please use the following OTP to verify your account:</p>
+                            <div style="font-size:24px; font-weight:bold; color:#d88310; background:#fff4e6; padding:12px 24px; border-radius:8px; display:inline-block; margin:10px 0;">
+                                ${otp}
+                            </div>
+                            <p style="font-size:14px; color:#666;">This code will expire in 10 minutes for security reasons.</p>
+                            </td>
+                        </tr>
+                        </table>
+                        <p style="font-size:12px; color:#999; margin-top:16px;">© 2025 TradeWise. All rights reserved.</p>
+                    </td>
+                    </tr>
+                </table>
+                </body>
+            </html>
+            `,
         };
         await this.sendEmail(option);
     }
 
-    // for internal use only
     private async sendEmail(option: IEmailOptions){
         const transporter = nodemailer.createTransport({
             host: this.emailEnvs.host,
@@ -67,19 +126,55 @@ export class EmailService {
     public async contactUs(name: string, email: string, message: string) {
         const option: IEmailOptions = {
             to: "communications@tradewise.com",
-            subject: "Contact Us",
+            subject: "Contact Us Message",
             text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
             html: `
-                <h3>Contact Us Message</h3>
-                <p><strong>Nsame:</strong> ${name}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Message:</strong> ${message}</p>
-            `
+            <!DOCTYPE html>
+            <html>
+                <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <title>New Contact Message</title>
+                <style>
+                    @media only screen and (max-width: 600px) {
+                        .container {
+                            width: 90% !important;
+                            padding: 10px !important;
+                        }
+                        h2 {
+                            font-size: 20px !important;
+                        }
+                        p {
+                            font-size: 14px !important;
+                        }
+                    }
+                </style>
+                </head>
+                <body style="background-color:#fff4e6; font-family:Arial, sans-serif; color:#333; margin:0; padding:0;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                    <td align="center">
+                        <table class="container" width="480" cellpadding="20" cellspacing="0" style="background:#ffffff; border-radius:12px; margin:40px 10px; max-width:480px;">
+                        <tr>
+                            <td>
+                            <h2 style="color:#c46b09;">New Contact Message</h2>
+                            <p><strong>Name:</strong> ${name}</p>
+                            <p><strong>Email:</strong> ${email}</p>
+                            <p><strong>Message:</strong></p>
+                            <p style="background:#fff4e6; padding:10px; border-radius:8px;">${message}</p>
+                            </td>
+                        </tr>
+                        </table>
+                        <p style="font-size:12px; color:#999; margin-top:16px;">© 2025 TradeWise Communications</p>
+                    </td>
+                    </tr>
+                </table>
+                </body>
+            </html>
+            `,
         };
         await this.sendEmail(option);
-        
-        return {
-            message: "Email sent successfully"
-        }
+
+        return { message: "Email sent successfully" };
     }
 }
