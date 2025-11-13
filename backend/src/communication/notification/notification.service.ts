@@ -45,7 +45,7 @@ export class NotificationService {
         if(!stockImage) return;
 
         const title = 'Low Stock Alert';
-        const message = `You have low stock. On ${stockImage.name}. Please ensure you have sufficient balance before the deadline.`;
+        const message = `Inventory for "${stockImage.name}" has fallen below the required level. Please review and restock as needed.`;
 
         const notification = await this.prismaService.mNotification.create({
             data: {

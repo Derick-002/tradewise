@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdInventory, MdCheckCircle, MdSchedule, MdAccountBalance, MdShoppingCart } from 'react-icons/md';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useNavigate, useParams } from 'react-router-dom';
 import AddItemForm from './forms/AddItemForm';
 import ViewModal from './modals/ViewModal';
 import EditModal from './modals/EditModal';
 import AddToCartButton from './buttons/AddToCartButton';
 import Cart from './Cart';
 import { useCart } from '../contexts/CartContext';
-import { getStockImagesQuery, createStockImageMutation, updateStockImageMutation, deleteStockImageMutation } from '../utils/gqlQuery';
+import { getStockImagesQuery, createStockImageMutation, updateStockImageMutation, deleteStockImageMutation, findStockImagesByQuery } from '../utils/gqlQuery';
 import { backendGqlApi } from '../utils/axiosInstance';
 import { toast } from 'react-toastify';
 
 const Stock = () => {
-
+  const navigate = useNavigate();
+  const { stockId } = useParams();
   const { addToCart, getCartItemCount } = useCart();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -75,6 +77,50 @@ const Stock = () => {
 
     getStockImages();
   }, []);
+
+  // Handle URL parameter for direct stock item viewing
+  useEffect(() => {
+    if (stockId && stockItems.length > 0) {
+      const stockItem = stockItems.find(item => item.id === stockId);
+      if (stockItem) {
+        setSelectedItem(stockItem);
+        setIsViewModalOpen(true);
+      } else {
+        // If stock item not found in current list, fetch it from backend
+        fetchStockItem(stockId);
+      }
+    }
+  }, [stockId, stockItems]);
+
+  // Fetch specific stock item from backend
+  const fetchStockItem = async (id) => {
+    try {
+      const response = await backendGqlApi.post('', {
+        query: findStockImagesByQuery,
+        variables: { id }
+      });
+      
+      if (response.data.data.getStockImage) {
+        const item = response.data.data.getStockImage;
+        const transformedItem = {
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          low_stock_quantity: item.low_stock_quantity || 5,
+          status: item.quantity <= 0 ? 'Out of Stock' : item.quantity < (item.low_stock_quantity || 5) ? 'Low Stock' : 'In Stock',
+          unit: item.unit,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt
+        };
+        setSelectedItem(transformedItem);
+        setIsViewModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Error fetching stock item:', error);
+      toast.error('Stock item not found');
+      navigate('/dashboard');
+    }
+  };
 
   const filteredItems = stockItems.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -311,10 +357,6 @@ const Stock = () => {
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
             />
           </div>
-          <button className="bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition duration-200 flex items-center gap-2">
-            <MdFilterList className="text-xl" />
-            Filters
-          </button>
         </div>
       </div>
 
@@ -391,6 +433,7 @@ const Stock = () => {
                         onClick={() => {
                           setSelectedItem(item);
                           setIsViewModalOpen(true);
+                          navigate(`/stock/${item.id}`);
                         }}
                         className="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition duration-200"
                         title="View Details"
@@ -437,6 +480,7 @@ const Stock = () => {
         onClose={() => {
           setIsViewModalOpen(false);
           setSelectedItem(null);
+          navigate('/dashboard');
         }}
         data={selectedItem}
         title="Product Details"

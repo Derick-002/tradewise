@@ -11,7 +11,7 @@ import Notification from './Notification';
 import CreditsDebit from './CreditsDebit';
 import Profile from './Profile';
 import '../index.css';
-import { mockNotifications, mockApiResponse } from '../__mock__';
+// Removed mock imports - using real backend data
 import { CgProfile } from "react-icons/cg";
 
 import { toast, ToastContainer } from 'react-toastify';
@@ -19,7 +19,8 @@ import { handleError } from '../utils/handleError';
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../features/auth/authThuck";
 import { backendGqlApi } from '../utils/axiosInstance';
-import { findallTransactionsQuery, findATransactionQuery } from '../utils/gqlQuery';
+import { findallTransactionsQuery, findATransactionQuery, getAllNotifications, markAsRead } from '../utils/gqlQuery';
+import { formatDistanceToNow } from 'date-fns';
 import TransactionSkeleton from './skeletons/TransactionSkeleton';
 
 const DashboardLayout = () => {
@@ -148,20 +149,59 @@ const DashboardLayout = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await mockApiResponse(mockNotifications);
-        if (response.success) {
-          setNotifications(response.data);
+        const response = await backendGqlApi.post('/graphql', {
+          query: getAllNotifications,
+        });
+
+        if (response.data.errors) {
+          console.error('Error fetching notifications:', response.data.errors);
+          return;
         }
-      } catch (err) {
-        console.error('Notifications error:', err);
+
+        const notificationsData = response.data.data.getNotifications;
+        
+        // Transform backend data and show only unread notifications in dropdown
+        const unreadNotifications = notificationsData
+          .filter(notif => !notif.read)
+          .slice(0, 5) // Show only first 5 unread notifications
+          .map(notif => ({
+            id: notif.id,
+            title: notif.title,
+            message: notif.message,
+            priority: notif.impact?.toLowerCase() || 'low', // Map impact to priority
+            created_at: notif.createdAt,
+            timeAgo: notif.createdAt ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true }) : 'Just now'
+          }));
+
+        setNotifications(unreadNotifications);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
       }
     };
 
     fetchNotifications();
   }, []);
 
-  const markNotificationAsRead = (notificationId) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      const response = await backendGqlApi.post('/graphql', {
+        query: markAsRead,
+        variables: { id: notificationId }
+      });
+
+      if (response.data.errors) {
+        console.error('Error marking notification as read:', response.data.errors);
+        toast.error('Failed to mark notification as read');
+        return;
+      }
+
+      // Remove from dropdown (since we only show unread notifications)
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      toast.success('Notification marked as read');
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      toast.error('Failed to mark notification as read');
+    }
   };
 
   return (
@@ -244,7 +284,7 @@ const DashboardLayout = () => {
                             <div className="ml-3 flex-1">
                               <p className="text-sm font-medium text-gray-900">{notification.title}</p>
                               <p className="text-sm text-gray-600">{notification.message}</p>
-                              <p className="text-xs text-gray-400 mt-1">{new Date(notification.created_at).toLocaleString()}</p>
+                              <p className="text-xs text-gray-400 mt-1">{notification.timeAgo}</p>
                             </div>
                           </div>
                         </div>
@@ -252,6 +292,17 @@ const DashboardLayout = () => {
                     ) : (
                       <div className="px-4 py-3 text-sm text-gray-500">No new notifications</div>
                     )}
+                    <div className="border-t border-gray-200">
+                      <button 
+                        onClick={() => {
+                          setActiveTab('notification');
+                          setShowNotifications(false);
+                        }}
+                        className="w-full px-4 py-2 text-sm text-[#BE741E] hover:bg-gray-50 font-medium"
+                      >
+                        View All Notifications
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

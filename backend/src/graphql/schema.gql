@@ -247,6 +247,7 @@ type Mutation {
   createStockImage(low_stock_quantity: Float, name: String!, unit: EUnitType!): MGqlStockImage!
   createTransaction(description: String!, financialDetails: GqlFinancialCreateInput, products: [GqlTransactionCreateProductInput!]!, secondParty: String!, type: ENTransactionType!): MGqlTransaction!
   deleteStockImage(stockImageId: String!): MGqlStockImage!
+  markAllAsRead: Boolean!
   markAsPaidBack(financialId: String!): MGqlFinancial!
   markAsRead(id: String!): MGqlNotification!
   updateFinancial(financialId: String!, input: GqlFinancialUpdateInput!): MGqlFinancial!

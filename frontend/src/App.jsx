@@ -49,6 +49,22 @@ function App() {
               </ProtectedRoute>
             }></Route>
 
+            <Route path='/stock/:stockId' element={
+              <ProtectedRoute>
+                <CartProvider>
+                  <DashboardLayout />
+                </CartProvider>
+              </ProtectedRoute>
+            }></Route>
+
+            <Route path='/notifications/:notificationId' element={
+              <ProtectedRoute>
+                <CartProvider>
+                  <DashboardLayout />
+                </CartProvider>
+              </ProtectedRoute>
+            }></Route>
+
             <Route path="/" element={ <Home />}></Route>
             <Route path="/login" element={ 
               <Login />

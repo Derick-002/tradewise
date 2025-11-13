@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ENNotificationFilterType } from 'generated/prisma';
 import { ENNotificationTimeFilters } from './notification.types';
@@ -67,15 +67,19 @@ export class Notification2Service {
 
     public async markAsRead(traderId: string, not_id: string) {
         try {
-            const updated = await this.prismaService.mNotification.updateMany({
+            const notification = await this.prismaService.mNotification.findUnique({
                 where: { id: not_id, traderId },
+            });
+
+            if (!notification)
+                throw new NotFoundException('Notification does not exist or does not belong to you');
+
+            const updated = await this.prismaService.mNotification.update({
+                where: { id: not_id },
                 data: { read: true },
             });
 
-            if (updated.count === 0)
-                throw new NotFoundException('Notification does not exist or does not belong to you');
-
-            return { success: true, message: 'Notification marked as read' };
+            return updated;
         } catch (error) {
             if (error instanceof PrismaClientKnownRequestError) {
                 if (error.code === 'P2025') {
@@ -83,6 +87,17 @@ export class Notification2Service {
                 }
             }
             throw error;
+        }
+    }
+
+    public async markAllAsRead(traderId: string){
+        try {
+            await this.prismaService.mNotification.updateMany({
+                where: { traderId, read: false },
+                data: { read: true }
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Internal Server error");
         }
     }
 }

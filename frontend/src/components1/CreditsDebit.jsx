@@ -289,8 +289,8 @@ const CreditsDebit = () => {
               <MdAttachMoney className="text-purple-600 text-xl" />
             </div>
             <div className="text-left">
-              <p className="font-medium text-gray-800">Financial Report</p>
-              <p className="text-sm text-gray-600">Generate detailed report</p>
+              <p className="font-medium text-gray-800">Financial Reports</p>
+              <p className="text-sm text-gray-600">Generate detailed Reports</p>
             </div>
           </button>
         </div>

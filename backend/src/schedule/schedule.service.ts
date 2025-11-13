@@ -57,13 +57,14 @@ export class ScheduleService {
     @Interval(5 * 60 * 1_000)
     public async alertLowStocks() {
         const stockImages = await this.prismaService.mStockImage.findMany({
-            where: { quantity: { lte: 10 }, notified: false },
+            where: { notified: false },
             include: { stock: { include: { trader: true } } }
         });
 
+        const lowStockImages = stockImages.filter(si => si.quantity <= si.low_stock_quantity);
         let sentNotifications = 0;
 
-        for (const s of stockImages) {
+        for (const s of lowStockImages) {
             const traderId = s.stock.trader.id;
             await this.notificationService.lowStockAlert(traderId, s.id);
             sentNotifications++;

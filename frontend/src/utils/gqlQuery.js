@@ -93,24 +93,6 @@ export const findStockImagesByQuery = `
   }
 `;
 
-// Category Queries
-export const createCategoryMutation = `
-  mutation {
-    category: createCategory(
-      name: "Electronics",
-      type: WEIGHTS,
-      symbol: "kg"
-    ) {
-      id
-      name
-      type
-      symbol
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
 // transaction queries
 export const createTransactionMutation = `
   mutation CreateTransaction(
@@ -327,3 +309,56 @@ export const makeFinancialPaid = `
     }
   }
 `;
+
+
+// notifications queries
+export const getAllNotifications = `
+  query GetNotifications($timeFilters: ENNotificationTimeFilters, $filters: ENNotificationFilterType) {
+    getNotifications(timeFilters: $timeFilters, filters: $filters) {
+      id
+      title
+      message
+      impact
+      filterType
+      type
+      read
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const getANotification = `
+  query GetANotification($id: String!) {
+    getANotification(id: $id) {
+      id
+      title
+      message
+      impact
+      filterType
+      type
+      read
+      createdAt
+    }
+  }
+`;
+
+
+export const markAsRead = `
+  mutation MarkAsRead($id: String!) {
+    markAsRead(id: $id) {
+      id
+      title
+      read
+      updatedAt
+    }
+  }
+`;
+
+// returns promise<boolean>
+export const markAllAsRead = `
+  mutation MarkAllAsRead {
+    markAllAsRead
+  }
+`;
+

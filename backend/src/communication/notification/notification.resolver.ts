@@ -37,4 +37,13 @@ export class NotificationResolver {
     ) {
         return await this.notification2Service.markAsRead(user.sub, not_id)
     }
+
+    @Mutation(() => Boolean)
+    public async markAllAsRead(
+        @CurrentUser() user: IJwtPayload,
+    ) {
+        await this.notification2Service.markAllAsRead(user.sub);
+        return true;
+    }
+    
 }
