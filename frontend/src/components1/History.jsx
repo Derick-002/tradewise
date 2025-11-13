@@ -19,6 +19,8 @@ const History = () => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
+        setError('');
+        
         const response = await backendGqlApi.post('/graphql', {
           query: findallTransactionsQuery,
         });
@@ -30,7 +32,7 @@ const History = () => {
           return;
         }
 
-        const transactionsData = response.data.data.transactions;
+        const transactionsData = response.data.data.transactions || [];
         setTransactions(transactionsData);
       } catch (err) {
         setError('Failed to load transactions');
@@ -48,7 +50,7 @@ const History = () => {
     const typeMatch = selectedFilter === 'all' || t.type?.toLowerCase() === selectedFilter;
     const searchMatch = searchTerm === '' || 
       t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.product?.toLowerCase().includes(searchTerm.toLowerCase());
+      t.products?.some(p => p.name?.toLowerCase().includes(searchTerm.toLowerCase()));
     return typeMatch && searchMatch;
   });
 
@@ -56,14 +58,20 @@ const History = () => {
   const totalTransactions = transactions.length;
   const totalSales = transactions
     .filter(t => t.type?.toLowerCase() === 'sale')
-    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    .reduce((sum, t) => {
+      const amount = t.financials?.reduce((acc, f) => acc + (f.amount || 0), 0) || 0;
+      return sum + amount;
+    }, 0);
   const totalPurchases = transactions
     .filter(t => t.type?.toLowerCase() === 'purchase')
-    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    .reduce((sum, t) => {
+      const amount = t.financials?.reduce((acc, f) => acc + (f.amount || 0), 0) || 0;
+      return sum + amount;
+    }, 0);
   const netProfit = totalSales - totalPurchases;
 
   const handleTransactionClick = (transaction) => {
-    navigate(`/transaction/${transaction.id}`);
+    navigate(`/financials/${transaction.id}`);
   };
 
   const getStatusColor = (status) => {
@@ -180,7 +188,7 @@ const History = () => {
             </button>
             <button
               onClick={() => setSelectedFilter('sale')}
-              className={`px-4 py-2 rounded-lg transition duration-200 ${
+              className={`px-6 py-3 rounded-lg font-medium transition duration-200 ${
                 selectedFilter === 'sale' 
                   ? 'bg-[#BE741E] text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -190,9 +198,9 @@ const History = () => {
             </button>
             <button
               onClick={() => setSelectedFilter('purchase')}
-              className={`px-4 py-2 rounded-lg transition duration-200 ${
-                selectedFilter === 'purchase' 
-                  ? 'bg-[#BE741E] text-white' 
+              className={`px-6 py-3 rounded-lg font-medium transition duration-200 ${
+                selectedFilter === 'purchase'
+                  ? 'bg-[#BE741E] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -212,11 +220,11 @@ const History = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Type</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Description</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Product</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Amount</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Date</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Date & Time</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Status</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Actions</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Contact</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -236,10 +244,10 @@ const History = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                      {transaction.description || transaction.product || 'N/A'}
+                      {transaction.products?.map(p => p.name).join(', ') || transaction.description || 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {parseFloat(transaction.amount || 0).toLocaleString()} Frw
+                      {(transaction.financials?.reduce((acc, f) => acc + (f.amount || 0), 0) || 0).toLocaleString()} Frw
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {transaction.createdAt 
@@ -255,33 +263,28 @@ const History = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                        transaction.status ? getStatusColor(transaction.status) : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {transaction.status || 'completed'}
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${getStatusColor('completed')}`}>
+                        completed
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTransactionClick(transaction);
-                        }}
-                        className="text-[#BE741E] hover:text-[#A0621A] p-2 rounded-lg hover:bg-orange-50 transition duration-200"
-                        title="View Details"
-                      >
-                        <MdVisibility className="text-lg" />
-                      </button>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {transaction.secondParty || 'N/A'}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                    {searchTerm || selectedFilter !== 'all' 
-                      ? 'No transactions found matching your criteria' 
-                      : 'No transactions available'
-                    }
+                    <div className="flex flex-col items-center">
+                      <MdReceipt className="h-12 w-12 text-gray-300 mb-4" />
+                      <p className="text-lg mb-2">No transactions found</p>
+                      <p className="text-sm">
+                        {searchTerm || selectedFilter !== 'all' 
+                          ? 'Try adjusting your search or filter criteria' 
+                          : 'Start by creating your first transaction'
+                        }
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}

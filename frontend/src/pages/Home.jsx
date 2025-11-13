@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import styles from './Home.module.css'
 import logo from '../assets/logo.png'
 import { FaUser, FaRegCommentDots } from 'react-icons/fa';
-import { MdEmail } from 'react-icons/md';
+import { MdEmail, MdDashboard } from 'react-icons/md';
 import { FaFacebook } from "react-icons/fa";
 import { FaInstagram } from "react-icons/fa";
 import { FaLinkedin } from "react-icons/fa";
@@ -16,6 +16,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typewriter } from 'react-simple-typewriter';
 import backendApi from '../utils/axiosInstance';
 import { toast, ToastContainer } from 'react-toastify';
+import { useSelector } from 'react-redux';
 
 const slides = [
   {
@@ -37,6 +38,7 @@ const slides = [
 
 const Home = () => {
     const [current, setcurrent ] = useState(0);
+    const { user, isAuthenticated } = useSelector((state) => state.auth);
 
     const [sending, setSending] = useState(false)
     const [contactUsData, setContatUsData] = useState({
@@ -70,6 +72,13 @@ const Home = () => {
 
     const nextSlide = () => setcurrent((current + 1) % slides.length);
     const prevSlide = () => setcurrent((current -1 + slides.length) % slides.length);
+    // Scroll functions for navigation
+    const scrollToSection = (sectionId) => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
     
     useEffect(() => {
         const timer = setInterval(() => {
@@ -85,24 +94,32 @@ const Home = () => {
                     <img src={logo} alt="logo"  className={styles.home_navbar_logo}/>
                     <h1 className={styles.home_navbar_title}>TradeWise</h1>
                     <div className={styles.home_navbar_links}>
-                        <a href="#">Home</a>
-                        <a href="#">About</a>
-                        <a href="#">Services</a>
-                        <a href="#">Contact</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}>Home</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>About</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('services'); }}>Services</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('faq'); }}>Q&A</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a>
                     </div>
 
                     <div className={styles.home_navbar_buttons}>
-                        <button ><Link to='/signup'>Signup</Link></button>
-                        <button ><Link to='/login'>Login</Link></button>
-                        <button className="bg-[#BE741E] text-white border-none flex items-center gap-2 px-4 py-2 rounded-lg">
-                            <PiDownloadSimpleBold className="text-xl mr-1" />
-                            Download App
-                        </button>
+                        {!isAuthenticated ? (
+                            <>
+                                <button><Link to='/signup'>Signup</Link></button>
+                                <button><Link to='/login'>Login</Link></button>
+                            </>
+                        ) : (
+                            <button className="bg-[#BE741E] text-white border-none flex items-center gap-2 px-4 py-2 rounded-lg">
+                                <Link to='/dashboard' className="flex items-center gap-2 text-white no-underline">
+                                    <MdDashboard className="text-xl" />
+                                    Go To Dashboard
+                                </Link>
+                            </button>
+                        )}
                     </div>
                 </div>
 
                 <div className={styles.home_content}>
-                    <div className="relative w-screen h-screen overflow-hidden mt-16">
+                    <div id="home" className="relative w-screen h-screen overflow-hidden mt-16">
                         {slides.map((slide, index) => (
                             <motion.div key={index} className={`absolute w-full h-full bg-center bg-cover flex flex-col justify-center items-center px-20 text-white ${index === current ? 'flex' : 'hidden'}`} style={{ backgroundImage: `url(${slide.image})` }} initial={{ opacity: 0 }} animate={{ opacity: index === current ? 1 : 0 }} transition={{ duration: 1 }} >
                                 <motion.h1 className="text-5xl font-bold mb-1 " initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} > 
@@ -136,7 +153,7 @@ const Home = () => {
                         </button>
                     </div>
                     
-                    <div className="flex flex-row justify-between items-center gap-16 p-16 bg-gradient-to-br from-orange-50 to-orange-100 relative overflow-hidden">
+                    <div id="about" className="flex flex-row justify-between items-center gap-16 p-16 bg-gradient-to-br from-orange-50 to-orange-100 relative overflow-hidden">
                         <div className="flex-1 relative z-10">
                             <h2 className="text-3xl font-bold mb-6 leading-tight text-black">
                                 About <span className="text-[#BE741E]">TradeWise</span>
@@ -175,7 +192,7 @@ const Home = () => {
                     </div>
 
 
-                    <div className={styles.home_content_how}>
+                    <div id="services" className={styles.home_content_how}>
                         <div className="text-center mb-16 relative">
                             <h4 className="text-black text-4xl font-bold mb-3 relative inline-block text-center">
                                 Take a look at our <span className="text-[#BE741E]">Worksteps</span>
@@ -221,7 +238,7 @@ const Home = () => {
                     <TestimonialCarousel />
                 </div>
 
-                <div className="bg-[#1C1206] text-white py-16 flex flex-col items-center">
+                <div id="contact" className="bg-[#1C1206] text-white py-16 flex flex-col items-center">
                     <button className="bg-none border-2 border-white text-white rounded-full px-10 py-3 text-xl font-semibold mb-8 flex items-center gap-3 cursor-pointer hover:bg-white hover:text-[#1C1206] transition-colors">
                         <FaRegCommentDots size={22} className="text-[#BE741E]" />
                         Contact Us
@@ -269,7 +286,7 @@ const Home = () => {
                     </form>
                 </div>
 
-                <div className="bg-orange-50/80 px-48 py-12">
+                <div id="faq" className="bg-orange-50/80 px-48 py-12">
                     <div className="flex justify-center items-center flex-wrap">
                         <div className="text-center">
                         <h2 className="text-black text-4xl mb-8 font-bold">
@@ -349,7 +366,7 @@ const Home = () => {
                                 <MdEmail  className="text-[#BE741E]" /> support@tradewise.com
                             </div>
                             <div className="text-gray-300 text-lg flex items-center gap-3 mt-5">
-                                <IoLocationSharp  className="text-[#BE741E]" />Kigali, Rwanda
+                                <IoLocationSharp  className="text-[#BE741E]" /> Kigali, Rwanda
                             </div>
                             
                         </div>
