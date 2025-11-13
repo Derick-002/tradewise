@@ -362,3 +362,26 @@ export const markAllAsRead = `
   }
 `;
 
+// analytics: 
+export const getAnalytics = `
+  query getStockAnalysis($start: DateTime , $end: DateTime){
+    stockAnalysis(start: $start, end: $end) {
+      analysisPeriod { startDate, endDate }
+      stock {
+        id
+        createdAt
+        updatedAt
+        trader { enterpriseName }
+      }
+      products {
+        bought { id,name, quantity, price }
+        sold { id, name, quantity, price }
+      }
+      transactions { id, type, description, createdAt }
+      totalSales
+      totalPurchases
+      profit
+      finance { debits, credits }
+    }
+  }
+`;

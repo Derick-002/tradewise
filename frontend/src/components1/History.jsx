@@ -1,67 +1,70 @@
-import React, { useState } from 'react';
-import { MdSearch, MdFilterList, MdCalendarToday, MdReceipt, MdShoppingCart, MdAttachMoney, MdAccountBalance, MdTrendingUp } from 'react-icons/md';
+import React, { useState, useEffect } from 'react';
+import { MdSearch, MdFilterList, MdCalendarToday, MdReceipt, MdShoppingCart, MdAttachMoney, MdAccountBalance, MdTrendingUp, MdVisibility } from 'react-icons/md';
+import { useNavigate } from 'react-router-dom';
+import { backendGqlApi } from '../utils/axiosInstance';
+import { findallTransactionsQuery } from '../utils/gqlQuery';
+import { toast } from 'react-toastify';
+import { formatDistanceToNow } from 'date-fns';
 
 
 const History = () => {
+  const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState('all');
-  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const transactions = [
-    { 
-      id: 1, 
-      type: 'sale', 
-      product: 'cement', 
-      amount: 1800000, 
-      date: '2024-01-15', 
-      time: '14:30',
-      status: 'completed',
-      customer: 'John Doe'
-    },
-    { 
-      id: 2, 
-      type: 'purchase', 
-      product: 'fer plan', 
-      amount: 1200000, 
-      date: '2024-01-14', 
-      time: '09:15',
-      status: 'completed',
-      supplier: 'Tech Supplies Ltd'
-    },
-    { 
-      id: 3, 
-      type: 'sale', 
-      product: 'olive oil', 
-      amount: 1500000, 
-      date: '2024-01-13', 
-      time: '16:45',
-      status: 'pending',
-      customer: 'Olive Oil Company'
-    },
-    { 
-      id: 4, 
-      type: 'purchase', 
-      product: 'biscuits', 
-      amount: 2500000, 
-      date: '2024-01-12', 
-      time: '11:20',
-      status: 'completed',
-      supplier: 'ISA Biscuits'
-    },
-    { 
-      id: 5, 
-      type: 'sale', 
-      product: 'gucci clothes', 
-      amount: 1800000, 
-      date: '2024-01-11', 
-      time: '13:10',
-      status: 'pending',
-      customer: 'Mike Johnson'
-    },
-  ];
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setLoading(true);
+        const response = await backendGqlApi.post('/graphql', {
+          query: findallTransactionsQuery,
+        });
 
-  const filteredTransactions = selectedFilter === 'all' 
-    ? transactions 
-    : transactions.filter(t => t.type === selectedFilter);
+        if (response.data.errors) {
+          console.error('Transaction API errors:', response.data.errors);
+          toast.error('Failed to load transactions');
+          setError('Failed to load transactions');
+          return;
+        }
+
+        const transactionsData = response.data.data.transactions;
+        setTransactions(transactionsData);
+      } catch (err) {
+        setError('Failed to load transactions');
+        console.error('Transaction error:', err);
+        toast.error('Failed to load transactions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const filteredTransactions = transactions.filter(t => {
+    const typeMatch = selectedFilter === 'all' || t.type?.toLowerCase() === selectedFilter;
+    const searchMatch = searchTerm === '' || 
+      t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.product?.toLowerCase().includes(searchTerm.toLowerCase());
+    return typeMatch && searchMatch;
+  });
+
+  // Calculate summary statistics
+  const totalTransactions = transactions.length;
+  const totalSales = transactions
+    .filter(t => t.type?.toLowerCase() === 'sale')
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+  const totalPurchases = transactions
+    .filter(t => t.type?.toLowerCase() === 'purchase')
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+  const netProfit = totalSales - totalPurchases;
+
+  const handleTransactionClick = (transaction) => {
+    navigate(`/transaction/${transaction.id}`);
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -75,6 +78,19 @@ const History = () => {
   const getTypeIcon = (type) => {
     return type === 'sale' ? <MdShoppingCart className="text-[#BE741E]" /> : <MdAttachMoney className="text-[#BE741E]" />;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#BE741E]"></div>
+        <p className="ml-4 text-gray-600">Loading transactions...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-600">{error}</div>;
+  }
 
   return (
     <div className="space-y-6 ">
@@ -96,7 +112,7 @@ const History = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Transactions</p>
-              <p className="text-3xl font-bold text-gray-800">54 </p>
+              <p className="text-3xl font-bold text-gray-800">{totalTransactions}</p>
             </div>
             <div className="bg-[#BE741E] p-3 mt-4 rounded-lg">
               <MdReceipt className="text-white text-2xl" />
@@ -107,7 +123,7 @@ const History = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Sales</p>
-              <p className="text-2xl font-bold text-gray-800">342,000 Frw</p>
+              <p className="text-2xl font-bold text-gray-800">{totalSales.toLocaleString()} Frw</p>
             </div>
             <div className="bg-[#BE741E] p-3 rounded-lg">
               <MdShoppingCart className="text-[#fff] text-2xl" />
@@ -118,7 +134,7 @@ const History = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Purchases</p>
-              <p className="text-2xl font-bold text-gray-800">234,000 Frw</p>
+              <p className="text-2xl font-bold text-gray-800">{totalPurchases.toLocaleString()} Frw</p>
             </div>
             <div className="bg-[#BE741E] p-3 rounded-lg">
               <MdAttachMoney className="text-[#fff] text-2xl" />
@@ -129,7 +145,7 @@ const History = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Net Profit</p>
-              <p className="text-2xl font-bold text-gray-800">108,000 Frw</p>
+              <p className="text-2xl font-bold text-gray-800">{netProfit.toLocaleString()} Frw</p>
             </div>
             <div className="bg-[#BE741E] p-3 rounded-lg">
               <MdTrendingUp className="text-white text-2xl" />
@@ -146,6 +162,8 @@ const History = () => {
             <input
               type="text"
               placeholder="Search transactions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
             />
           </div>
@@ -168,7 +186,7 @@ const History = () => {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Sales
+              Sales ({transactions.filter(t => t.type?.toLowerCase() === 'sale').length})
             </button>
             <button
               onClick={() => setSelectedFilter('purchase')}
@@ -178,7 +196,7 @@ const History = () => {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Purchases
+              Purchases ({transactions.filter(t => t.type?.toLowerCase() === 'purchase').length})
             </button>
           </div>
         </div>
@@ -194,39 +212,79 @@ const History = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Type</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Product</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Description</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Amount</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Date & Time</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Date</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Status</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Contact</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredTransactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50 transition duration-150">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {getTypeIcon(transaction.type)}
-                      <span className="text-sm font-medium capitalize text-gray-900">
-                        {transaction.type}
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction) => (
+                  <tr 
+                    key={transaction.id} 
+                    className="hover:bg-gray-50 transition duration-150 cursor-pointer"
+                    onClick={() => handleTransactionClick(transaction)}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        {getTypeIcon(transaction.type)}
+                        <span className="text-sm font-medium capitalize text-gray-900">
+                          {transaction.type}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                      {transaction.description || transaction.product || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {parseFloat(transaction.amount || 0).toLocaleString()} Frw
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {transaction.createdAt 
+                        ? new Date(transaction.createdAt).toLocaleDateString()
+                        : 'N/A'
+                      }
+                      <br />
+                      <span className="text-xs text-gray-400">
+                        {transaction.createdAt 
+                          ? formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })
+                          : ''
+                        }
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 font-medium">{transaction.product}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{transaction.amount.toLocaleString()} Frw</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {new Date(transaction.date).toLocaleDateString()} at {transaction.time}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(transaction.status)}`}>
-                      {transaction.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {transaction.customer || transaction.supplier}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
+                        transaction.status ? getStatusColor(transaction.status) : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {transaction.status || 'completed'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTransactionClick(transaction);
+                        }}
+                        className="text-[#BE741E] hover:text-[#A0621A] p-2 rounded-lg hover:bg-orange-50 transition duration-200"
+                        title="View Details"
+                      >
+                        <MdVisibility className="text-lg" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                    {searchTerm || selectedFilter !== 'all' 
+                      ? 'No transactions found matching your criteria' 
+                      : 'No transactions available'
+                    }
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
