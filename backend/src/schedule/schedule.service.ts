@@ -73,24 +73,28 @@ export class ScheduleService {
         this.logger.log(`Sent ${sentNotifications} low stock notifications.`);
     }
 
-    @Interval(10 * 60 * 1_000)
+    @Interval(5 * 60 * 1_000)
     public async clearOldForgotPasswordOtps() {
-        const cutoffDate = new Date(Date.now() - 10 * 60 * 1000); // 10 minutes ago
-
-        const deleted = await this.prismaService.mTrader.updateMany({
-            where: { resetPasswordExpires: { lt: cutoffDate } },
-            data: { resetPasswordExpires: null, resetPasswordToken: null },
-        });
-
-        this.logger.log(`Cleared ${deleted.count} old forgot password OTPs(Tokens).`);
+        try {            
+            const cutoffDate = new Date(Date.now() - 10 * 60 * 1000); // 10 minutes ago
+    
+            const deleted = await this.prismaService.mTrader.updateMany({
+                where: { resetPasswordExpires: { not: null, lte: cutoffDate } },
+                data: { resetPasswordExpires: null, resetPasswordToken: null },
+            });
+    
+            this.logger.log(`Cleared ${deleted.count} old forgot password OTPs(Tokens).`);
+        } catch (error) {
+            this.logger.error('Error clearing old reset tokens', error);
+        }
     }
 
-    @Interval(10 * 60 * 1_000)
+    @Interval(5 * 60 * 1_000)
     public async clearOldVerifyEmailOtps() {
         const cutoffDate = new Date(Date.now() - 10 * 60 * 1000); // 10 minutes ago
 
         const deleted = await this.prismaService.mTrader.updateMany({
-            where: { verifyAccountExpires: { lt: cutoffDate } },
+            where: { verifyAccountExpires: { not: null, lt: cutoffDate } },
             data: { verifyAccountExpires: null, verifyAccountToken: null },
         });
 

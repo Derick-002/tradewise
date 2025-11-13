@@ -51,11 +51,16 @@ export class StockService {
             const nameLower = name.toLowerCase();
 
             const stock = await this.prismaService.mStock.findUnique({
-                where: {
-                    traderId
-                }
+                where: { traderId }
             });
             if (!stock) throw new BadRequestException('Stock not found');
+
+            const existing = await this.prismaService.mStockImage.findUnique({
+                where: {
+                    name_stockId: { name: nameLower, stockId: stock.id }
+                }
+            });
+            if (!existing) throw new BadRequestException('Stock image already exists for this stock');
 
             const stockImage = await this.prismaService.mStockImage.create({
                 data: {

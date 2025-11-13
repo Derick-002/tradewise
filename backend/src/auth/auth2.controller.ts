@@ -25,7 +25,7 @@ export class Auth2Controller {
         //sending email
         try {
             await this.emailService.forgetPassword(otp, dto.email);
-            return otp;
+            // return otp;
         } catch (error) {
             throw new InternalServerErrorException('Failed to send email', error.message);
         }
@@ -50,7 +50,7 @@ export class Auth2Controller {
         //sending email
         try {
             await this.emailService.verifyAccount(otp, dto.email);
-            return otp;
+            // return otp;
         } catch (error) {
             throw new InternalServerErrorException('Failed to send email', error.message);
         }

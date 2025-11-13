@@ -82,7 +82,7 @@ export class TransactionService {
 
         for (const product of products) {
             const stockImg = await this.prismaService.mStockImage.findUnique({
-                where: { name: product.name }
+                where: { name_stockId: { name: product.name, stockId: stock.id } }
             });
 
             if (!stockImg) {
@@ -108,7 +108,7 @@ export class TransactionService {
         for(const product of products) {
             try {                
                 const stockImg = await this.prismaService.mStockImage.update({
-                    where: { name: product.name },
+                    where: { name_stockId: { name: product.name, stockId: stock.id } },
                     data: 
                         details.type === "Purchase"
                             ? { quantity: { increment: product.quantity }}
