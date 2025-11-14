@@ -8,7 +8,8 @@ import { GqlTransactionCreateProductInput, TTransactionCreateProduct } from './t
 import { GqlFinancialCreateInput } from '../financials/financials.types';
 import { FinancialsService } from '../financials/financials.service';
 import { VerifiedGuard } from 'src/custom/guards/verified/verified.guard';
-import { UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards } from '@nestjs/common';
+import { ApolloErrorFilter } from 'src/custom/filters/ApolloError.filter';
 
 @UseGuards(VerifiedGuard)
 @Resolver()
@@ -34,6 +35,7 @@ export class TransactionResolver {
   }
 
   @Mutation(() => MGqlTransaction)
+  @UseFilters(ApolloErrorFilter)
   public async createTransaction(
     @CurrentUser() user: IJwtPayload,
     @Args('type', { type: () => ENTransactionType }) type: ENTransactionType,

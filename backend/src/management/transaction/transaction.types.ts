@@ -4,7 +4,7 @@ import { ENTransactionType } from 'generated/prisma';
 export type TTransactionCreateProduct = {
     name: string;
     price: number;
-    brand?: string;
+    // brand?: string;
     quantity: number;
 }
 
