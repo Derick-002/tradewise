@@ -16,6 +16,7 @@ import { SettingsMiddleware } from './custom/middlewares/settings/settings.middl
 import { ManagementModule } from './management/management.module';
 import { IJwtPayload } from './auth/auth.types';
 import { ScheduleModule } from './schedule/schedule.module';
+import { graphqlLoggerPlugin } from './custom/plugins/graphqlLogger.plugin';
 
 @Module({
     imports: [
@@ -50,12 +51,10 @@ import { ScheduleModule } from './schedule/schedule.module';
                     req.user = user;
                     return { req, res, user };
                 },
+                plugins: [graphqlLoggerPlugin()]
             }),
         }),
-        ThrottlerModule.forRoot([{
-            ttl: 60,
-            limit: 5,
-        }]),
+        ThrottlerModule.forRoot([{ ttl: 60, limit: 5 }]),
         ScheduleModule,
         AuthModule,
         CommunicationModule,

@@ -22,6 +22,10 @@ export function loggerMiddleware() {
   return (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
 
+    if (req.path.startsWith('/graphql')) {
+      return next();
+    }
+
     res.on('finish', () => {
         const duration = Date.now() - start;
         const method = req.method;
