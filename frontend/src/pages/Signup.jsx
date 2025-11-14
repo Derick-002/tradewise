@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Loginimage from '../assets/Login.jpg';
 import { Eye, EyeOff, Sparkles, ArrowRight, ArrowLeft, Moon, Sun } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { appToast } from '../utils/appToast';
 import { handleError } from '../utils/handleError';
 import { useDispatch, useSelector } from 'react-redux';
 import { signupUser } from '../features/auth/authThuck';
@@ -37,7 +36,7 @@ const Signup = () => {
     e.preventDefault();
 
     if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+      appToast.error('Password must be at least 6 characters long');
       return;
     }
 
@@ -50,15 +49,15 @@ const Signup = () => {
       }));
 
       if (signupUser.fulfilled.match(resultAction)) {
-        toast.success('Account created successfully! Starting onboarding...');
+        appToast.success('Account created successfully! Starting onboarding...');
         setTimeout(() => navigate('/email'), 1000);
       } else {
         const fullError = resultAction.payload;
-        toast.error(fullError);
+        appToast.error(fullError);
       }
     } catch (err) {
       const fullError = handleError(err);
-      toast.error(fullError.message);
+      appToast.error(fullError.message);
     } finally {
       setIsSigningUp(false);
     }
@@ -66,17 +65,6 @@ const Signup = () => {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        pauseOnHover
-        draggable
-        theme="colored"
-      />
-
       <div className={`${dark ? 'dark' : ''}`}>
         <div className="min-h-screen flex items-center justify-center overflow-hidden relative bg-gradient-to-b from-white to-brand-50 dark:from-[#0B0B10] dark:to-[#0B0B10]">
           <div

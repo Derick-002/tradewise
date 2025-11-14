@@ -13,8 +13,7 @@ import { CartProvider } from "./contexts/CartContext";
 import Forgotpassword from "./pages/Forgotpassword";
 import Resetpassword from "./pages/Resetpassword";
 import NotFound from "./pages/Notfound";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { AppToastContainer } from './utils/appToast';
 import ProtectedRoute from './components1/ProtectedRoute';
 import Analytics from "./pages/Analytics";
 import Stock from "./components1/Stock";
@@ -22,7 +21,7 @@ import Stock from "./components1/Stock";
 function App() {
   return (
     <>
-      <ToastContainer />
+      <AppToastContainer />
       <Router>
         <Routes>            
             <Route path='/dashboard' element={

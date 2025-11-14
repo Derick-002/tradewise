@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Signupimage from '../assets/Login.jpg';
 import { EyeOff, Eye, Sparkles, ArrowRight, ArrowLeft, Moon, Sun } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { appToast } from '../utils/appToast';
 import { handleError } from '../utils/handleError';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../features/auth/authThuck';
@@ -31,7 +30,7 @@ const Login = () => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
-      toast.error('Please fill all fields');
+      appToast.error('Please fill all fields');
       return;
     }
 
@@ -40,15 +39,15 @@ const Login = () => {
       const resultAction = await dispatch(loginUser(formData));
 
       if (loginUser.fulfilled.match(resultAction)) {
-        toast.success('Logged in successfully!');
+        appToast.success('Logged in successfully!');
         navigate('/dashboard');
       } else {
         const fullError = resultAction.payload;
-        toast.error(fullError);
+        appToast.error(fullError);
       }
     } catch (err) {
       const fullError = handleError(err);
-      toast.error(fullError.message);
+      appToast.error(fullError.message);
     } finally {
       setIsLoggingIn(false);
     }
@@ -56,17 +55,6 @@ const Login = () => {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        pauseOnHover
-        draggable
-        theme="colored"
-      />
-
       <div className={`${dark ? 'dark' : ''}`}>
         <div className="min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-brand-50 dark:from-[#0B0B10] dark:to-[#0B0B10]">
           <div

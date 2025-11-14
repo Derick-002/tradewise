@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typewriter } from 'react-simple-typewriter';
 import backendApi from '../utils/axiosInstance';
-import { toast, ToastContainer } from 'react-toastify';
+import { appToast } from '../utils/appToast';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchUser } from '../features/auth/authThuck';
 
@@ -58,15 +58,15 @@ const Home = () => {
     const handleContactUs = async (e) => {
         e.preventDefault();
         if(contactUsData.name === '' || contactUsData.email === '' || contactUsData.message === '') 
-            return toast.error('All fields are required');
+            return appToast.error('All fields are required');
         
         try {
             setSending(true);
             const res = await backendApi.post('/email/contact-us', contactUsData);
             
-            toast.success("Message sent successfully");
+            appToast.success("Message sent successfully");
         } catch (error) {
-            toast.error("Message not sent");
+            appToast.error("Message not sent");
         } finally {
             setSending(false);
             setContatUsData({ name: '', email: '', message: '' });

@@ -424,7 +424,7 @@ const Notification = () => {
                       title="Mark as read"
                     >
                       <MdMarkEmailRead className="text-lg" />
-                      <span className="text-xs">Mark as read</span>
+                      <span className="text-xs text-green-800 font-semibold hover:text-green-800/75">Mark as read</span>
                     </button>
                   )}
                 </div>

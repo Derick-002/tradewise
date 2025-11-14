@@ -14,7 +14,7 @@ import '../index.css';
 // Removed mock imports - using real backend data
 import { CgProfile } from "react-icons/cg";
 
-import { toast, ToastContainer } from 'react-toastify';
+import { appToast } from '../utils/appToast';
 import { handleError } from '../utils/handleError';
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../features/auth/authThuck";
@@ -61,15 +61,15 @@ const DashboardLayout = () => {
               setActiveTab('buying');
             }
             
-            // toast.success(`Transaction found: ${transaction.type} transaction`);
+            appToast.success(`Transaction found: ${transaction.type} transaction`);
           } else {
             // Transaction not found
-            toast.error(`Transaction ${params.id} not found`);
+            appToast.error(`Transaction ${params.id} not found`);
             navigate('/dashboard');
           }
         } catch (error) {
           console.error('Error searching for transaction:', error);
-          toast.error(`Error finding transaction: ${error.message}`);
+          appToast.error(`Error finding transaction: ${error.message}`);
           // Default to buying if error
           setActiveTab('buying');
         } finally {
@@ -112,11 +112,11 @@ const DashboardLayout = () => {
       await dispatch(logoutUser());
       // Clear saved tab on logout
       localStorage.removeItem('dashboardActiveTab');
-      toast.success("Logged out successfully !!!");
+      appToast.success("Logged out successfully !!!");
       navigate("/login");
     } catch (error) {
       const { message } = handleError(error);
-      toast.error(message);
+      appToast.error(message);
     } finally {
       setLoading(false);
     }
@@ -191,23 +191,21 @@ const DashboardLayout = () => {
 
       if (response.data.errors) {
         console.error('Error marking notification as read:', response.data.errors);
-        toast.error('Failed to mark notification as read');
+        appToast.error('Failed to mark notification as read');
         return;
       }
 
       // Remove from dropdown (since we only show unread notifications)
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      toast.success('Notification marked as read');
+      appToast.success('Notification marked as read');
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      toast.error('Failed to mark notification as read');
+      appToast.error('Failed to mark notification as read');
     }
   };
 
   return (
     <div className="flex h-screen bg-white font-sans text-gray-800 hide-scrollbar">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={true} closeOnClick pauseOnHover draggable theme="colored" />
-
       {/* Sidebar (navbar) */}
       <div className="w-64 shadow-2xl flex flex-col border-r border-gray-200 hide-scrollbar" style={{ backgroundColor: '#be741e' }}>
         <div className="p-6 border-b border-gray-200 flex items-center">
