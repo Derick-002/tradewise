@@ -71,7 +71,7 @@ const History = () => {
   const netProfit = totalSales - totalPurchases;
 
   const handleTransactionClick = (transaction) => {
-    navigate(`/financials/${transaction.id}`);
+    navigate(`/transaction/${transaction.id}`);
   };
 
   const getStatusColor = (status) => {

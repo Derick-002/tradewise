@@ -3,7 +3,7 @@ import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdAttach
 import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
 import { backendGqlApi } from '../utils/axiosInstance';
-import { findAllFinancials, makeFinancialPaid, updateFinancials } from '../utils/gqlQuery';
+import { findAllFinancials, findAFinancials, makeFinancialPaid, updateFinancials } from '../utils/gqlQuery';
 import FinancialForm from './forms/FinancialForm';
 import ViewFinancialModal from './modals/ViewFinancialModal';
 
@@ -53,15 +53,51 @@ const CreditsDebit = () => {
     fetchFinancials();
   }, []);
 
-  // Handle URL params - open modal if financialId is present
+  // Handle URL params - open modal if financialId is present, with backend fallback
   useEffect(() => {
-    if (financialId && financials.length > 0) {
-      const financial = financials.find(f => f.id === financialId);
-      if (financial) {
-        setSelectedFinancial(financial);
-        setIsViewModalOpen(true);
+    const handleFinancialFromUrl = async () => {
+      if (!financialId) return;
+
+      // Try local list first
+      if (financials.length > 0) {
+        const localFinancial = financials.find(f => f.id === financialId);
+        if (localFinancial) {
+          setSelectedFinancial(localFinancial);
+          setIsViewModalOpen(true);
+          return;
+        }
       }
-    }
+
+      // Fallback to backend search if not found locally
+      try {
+        const response = await backendGqlApi.post('/graphql', {
+          query: findAFinancials,
+          variables: { id: financialId }
+        });
+
+        const financial = response.data.data?.financials;
+
+        if (!financial) {
+          toast.error(`Financial record ${financialId} not found`);
+          navigate('/dashboard');
+          return;
+        }
+
+        const transformedFinancial = {
+          ...financial,
+          paid: Boolean(financial.isPaidBack),
+        };
+
+        setSelectedFinancial(transformedFinancial);
+        setIsViewModalOpen(true);
+      } catch (error) {
+        console.error('Error fetching financial from backend:', error);
+        toast.error(error?.response?.data?.errors?.[0]?.message || 'Failed to load financial record');
+        navigate('/dashboard');
+      }
+    };
+
+    handleFinancialFromUrl();
   }, [financialId, financials]);
 
   // Helper function to check if deadline is approaching (within 1 day)
@@ -84,7 +120,7 @@ const CreditsDebit = () => {
   const handleViewFinancial = (financial) => {
     setSelectedFinancial(financial);
     setIsViewModalOpen(true);
-    navigate(`/financials/${financial.id}`);
+    navigate(`/financial/${financial.id}`);
   };
 
   // Handle close view modal

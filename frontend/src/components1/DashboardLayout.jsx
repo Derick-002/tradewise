@@ -60,8 +60,6 @@ const DashboardLayout = () => {
               // Default to buying if unknown type
               setActiveTab('buying');
             }
-            
-            appToast.success(`Transaction found: ${transaction.type} transaction`);
           } else {
             // Transaction not found
             appToast.error(`Transaction ${params.id} not found`);
@@ -69,9 +67,10 @@ const DashboardLayout = () => {
           }
         } catch (error) {
           console.error('Error searching for transaction:', error);
-          appToast.error(`Error finding transaction: ${error.message}`);
-          // Default to buying if error
+          appToast.error(error.response.data.errors[0].message);
+          // Default to buying if error and reset URL to dashboard
           setActiveTab('buying');
+          navigate('/dashboard');
         } finally {
           setIsSearchingTransaction(false);
         }
@@ -123,11 +122,6 @@ const DashboardLayout = () => {
   };
 
   const renderContent = () => {
-    // Show skeleton while searching for transaction
-    if (isSearchingTransaction) {
-      return <TransactionSkeleton />;
-    }
-
     switch (activeTab) {
       case 'dashboard': return <Dashboard />;
       case 'stock': return <Stock />;

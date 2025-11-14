@@ -40,7 +40,7 @@ function App() {
               </ProtectedRoute>
             }></Route>
 
-            <Route path='/financials/:financialId' element={
+            <Route path='/financial/:financialId' element={
               <ProtectedRoute>
                 <CartProvider>
                   <DashboardLayout />
