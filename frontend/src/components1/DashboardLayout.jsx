@@ -15,7 +15,7 @@ import '../index.css';
 import { CgProfile } from "react-icons/cg";
 
 import { appToast } from '../utils/appToast';
-import { handleError } from '../utils/handleError';
+import { handleError, getBackendMessage } from '../utils/handleError';
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../features/auth/authThuck";
 import { backendGqlApi } from '../utils/axiosInstance';
@@ -154,7 +154,7 @@ const DashboardLayout = () => {
         });
 
         if (response.data.errors) {
-          console.error('Error fetching notifications:', response.data.errors);
+          appToast.error(getBackendMessage(response, 'Failed to fetch notifications'));
           return;
         }
 
@@ -175,7 +175,9 @@ const DashboardLayout = () => {
 
         setNotifications(unreadNotifications);
       } catch (error) {
+        const refined = handleError(error);
         console.error('Error fetching notifications:', error);
+        appToast.error(refined.message || 'Failed to fetch notifications');
       }
     };
 
@@ -190,8 +192,7 @@ const DashboardLayout = () => {
       });
 
       if (response.data.errors) {
-        console.error('Error marking notification as read:', response.data.errors);
-        appToast.error('Failed to mark notification as read');
+        appToast.error(getBackendMessage(response, 'Failed to mark notification as read'));
         return;
       }
 
@@ -199,8 +200,9 @@ const DashboardLayout = () => {
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
       appToast.success('Notification marked as read');
     } catch (error) {
+      const refined = handleError(error);
       console.error('Error marking notification as read:', error);
-      appToast.error('Failed to mark notification as read');
+      appToast.error(refined.message || 'Failed to mark notification as read');
     }
   };
 

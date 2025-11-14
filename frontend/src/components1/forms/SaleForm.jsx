@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MdClose, MdSave, MdAttachMoney, MdAdd, MdDelete } from 'react-icons/md';
 import { toast } from 'react-toastify';
+import { appToast } from '../../utils/appToast';
+import { handleError, getBackendMessage } from '../../utils/handleError';
 import { backendGqlApi } from '../../utils/axiosInstance';
 
 const allProductsNameQuery = `
@@ -61,6 +63,10 @@ const SaleForm = ({ isOpen, onClose, onSave }) => {
     const response = await backendGqlApi.post('/graphql', {
       query: allProductsNameQuery
     });
+    if (response.data?.errors) {
+      appToast.error(getBackendMessage(response, 'Failed to load products'));
+      return;
+    }
     setAllProductsName(response.data.data.productNames);
   }
 
@@ -158,7 +164,8 @@ const SaleForm = ({ isOpen, onClose, onSave }) => {
 
       // Handle GraphQL errors
       if (response.data.errors) {
-        throw new Error(response.data.errors[0].message);
+        appToast.error(getBackendMessage(response, 'Failed to create sale'));
+        return;
       }
 
       // console.log('Sale created successfully:', response.data.data.createTransaction);
@@ -186,8 +193,9 @@ const SaleForm = ({ isOpen, onClose, onSave }) => {
       onClose();
 
     } catch (error) {
+      const refined = handleError(error);
       console.error('Error creating sale:', error);
-      toast.error(`Error creating sale: ${error.message}`);
+      appToast.error(refined.message || 'Failed to create sale');
     }
   };
 

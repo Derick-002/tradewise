@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { MdClose, MdSave, MdAccountBalance } from 'react-icons/md';
 import { toast } from 'react-toastify';
+import { appToast } from '../../utils/appToast';
+import { handleError, getBackendMessage } from '../../utils/handleError';
 import { backendGqlApi } from '../../utils/axiosInstance';
 import { createFinancial } from '../../utils/gqlQuery';
 
@@ -44,7 +46,7 @@ const TransactionForm = ({ isOpen, onClose, onSave }) => {
       });
       
       if (response.data.errors) {
-        toast.error('Error creating transaction: ' + response.data.errors[0].message);
+        appToast.error(getBackendMessage(response, 'Failed to create transaction'));
         return;
       }
       
@@ -77,8 +79,9 @@ const TransactionForm = ({ isOpen, onClose, onSave }) => {
       
       onClose();
     } catch (error) {
+      const refined = handleError(error);
       console.error('Error creating transaction:', error);
-      toast.error('Failed to create transaction. Please try again.');
+      appToast.error(refined.message || 'Failed to create transaction. Please try again.');
     }
   };
 

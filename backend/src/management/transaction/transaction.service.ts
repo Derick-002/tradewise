@@ -25,7 +25,7 @@ export class TransactionService {
         if (type === "Sale") transactionType = ENTransactionType.Sale;
         else if (type === "Purchase") transactionType = ENTransactionType.Purchase;
 
-        console.log("Transaction Type: ", transactionType);
+        // console.log("Transaction Type: ", transactionType);
         const transactions = await this.prismaService.mTransaction.findMany({
             where: {
                 stockId: stock.id,

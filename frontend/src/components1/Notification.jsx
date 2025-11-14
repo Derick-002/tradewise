@@ -14,6 +14,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { backendGqlApi } from '../utils/axiosInstance';
 import { getAllNotifications, markAsRead, markAllAsRead, getANotification } from '../utils/gqlQuery'
 import { toast } from 'react-toastify';
+import { appToast } from '../utils/appToast';
+import { handleError, getBackendMessage } from '../utils/handleError';
 import ViewNotificationModal from './modals/ViewNotificationModal';
 
 
@@ -70,7 +72,7 @@ const Notification = () => {
         });
     
         if (response.data.errors) {
-          toast.error('Error fetching notifications: ' + response.data.errors[0].message);
+          appToast.error(getBackendMessage(response, 'Failed to load notifications'));
           return;
         }
 
@@ -92,8 +94,9 @@ const Notification = () => {
 
         setNotifications(transformedNotifications);
       } catch (error) {
+        const refined = handleError(error);
         console.error('Error fetching notifications:', error);
-        toast.error('Failed to load notifications');
+        appToast.error(refined.message || 'Failed to load notifications');
       } finally {
         setLoading(false);
       }
@@ -142,8 +145,9 @@ const Notification = () => {
         setIsViewModalOpen(true);
       }
     } catch (error) {
+      const refined = handleError(error);
       console.error('Error fetching notification:', error);
-      toast.error('Notification not found');
+      appToast.error(refined.message || 'Notification not found');
       navigate('/dashboard');
     }
   };
@@ -168,7 +172,7 @@ const Notification = () => {
       });
 
       if (response.data.errors) {
-        toast.error('Error marking notification as read: ' + response.data.errors[0].message);
+        appToast.error(getBackendMessage(response, 'Failed to mark notification as read'));
         return;
       }
 
@@ -186,8 +190,9 @@ const Notification = () => {
       setNotificationToMarkRead(null);
       setConfirmReadText('');
     } catch (error) {
+      const refined = handleError(error);
       console.error('Error marking notification as read:', error);
-      toast.error('Failed to mark notification as read');
+      appToast.error(refined.message || 'Failed to mark notification as read');
     }
   };
 
@@ -209,7 +214,7 @@ const Notification = () => {
       });
 
       if (response.data.errors) {
-        toast.error('Error marking all notifications as read: ' + response.data.errors[0].message);
+        appToast.error(getBackendMessage(response, 'Failed to mark all notifications as read'));
         return;
       }
 
@@ -219,11 +224,12 @@ const Notification = () => {
         setIsConfirmAllOpen(false);
         setConfirmAllText('');
       } else {
-        toast.error('Failed to mark all notifications as read');
+        appToast.error('Failed to mark all notifications as read');
       }
     } catch (error) {
+      const refined = handleError(error);
       console.error('Error marking all notifications as read:', error);
-      toast.error('Failed to mark all notifications as read');
+      appToast.error(refined.message || 'Failed to mark all notifications as read');
     } finally {
       setMarkingAllAsRead(false);
     }

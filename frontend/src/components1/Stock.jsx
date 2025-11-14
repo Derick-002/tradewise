@@ -8,6 +8,8 @@ import EditModal from './modals/EditModal';
 import { getStockImagesQuery, createStockImageMutation, updateStockImageMutation, deleteStockImageMutation, findStockImagesByQuery } from '../utils/gqlQuery';
 import { backendGqlApi } from '../utils/axiosInstance';
 import { toast } from 'react-toastify';
+import { appToast } from '../utils/appToast';
+import { handleError, getBackendMessage } from '../utils/handleError';
 
 const Stock = () => {
   const navigate = useNavigate();
@@ -38,6 +40,10 @@ const Stock = () => {
         const response = await backendGqlApi.post('', {
           query: getStockImagesQuery
         });
+        if (response.data?.errors) {
+          appToast.error(getBackendMessage(response, 'Failed to load stock data'));
+          return;
+        }
         
         const stockData = response.data.data.getStockImages;
         
@@ -64,7 +70,9 @@ const Stock = () => {
         });
         
       } catch (err) {
-        setError('Failed to load stock data');
+        const refined = handleError(err);
+        setError(refined.message || 'Failed to load stock data');
+        appToast.error(refined.message || 'Failed to load stock data');
       } finally {
         setLoading(false);
       }
@@ -111,8 +119,9 @@ const Stock = () => {
         setIsViewModalOpen(true);
       }
     } catch (error) {
+      const refined = handleError(error);
       console.error('Error fetching stock item:', error);
-      toast.error('Stock item not found');
+      appToast.error(refined.message || 'Stock item not found');
       navigate('/dashboard');
     }
   };
@@ -171,7 +180,8 @@ const Stock = () => {
         setIsEditModalOpen(false);
       }
     } catch (error) {
-      toast.error('Failed to update item');
+      const refined = handleError(error);
+      appToast.error(refined.message || 'Failed to update item');
     } finally {
       setLoading(false);
     }
@@ -197,7 +207,8 @@ const Stock = () => {
         
         // Check for GraphQL errors
         if (response.data?.errors) {
-          throw new Error(response.data.errors[0]?.message || 'GraphQL error occurred');
+          appToast.error(getBackendMessage(response, 'Failed to delete item'));
+          return;
         }
 
         if (response.data?.data?.stockImage || response.data?.data?.deleteStockImage) {
@@ -220,10 +231,12 @@ const Stock = () => {
           setSelectedItem(null);
           setDeleteConfirmText('');
         } else {
-          throw new Error('Delete operation failed');
+          appToast.error('Delete operation failed');
+          return;
         }
       } catch (error) {
-        toast.error(error.message || 'Failed to delete item');
+        const refined = handleError(error);
+        appToast.error(refined.message || 'Failed to delete item');
       } finally {
         setLoading(false);
       }
@@ -274,7 +287,8 @@ const Stock = () => {
         return true;
       }
     } catch (err) {
-      toast.error('Failed to add item');
+      const refined = handleError(err);
+      appToast.error(refined.message || 'Failed to add item');
       return false;
     } finally {
       setLoading(false);

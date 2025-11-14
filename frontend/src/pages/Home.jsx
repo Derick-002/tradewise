@@ -16,6 +16,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typewriter } from 'react-simple-typewriter';
 import backendApi from '../utils/axiosInstance';
 import { appToast } from '../utils/appToast';
+import { handleError } from '../utils/handleError';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchUser } from '../features/auth/authThuck';
 
@@ -66,7 +67,8 @@ const Home = () => {
             
             appToast.success("Message sent successfully");
         } catch (error) {
-            appToast.error("Message not sent");
+            const refined = handleError(error);
+            appToast.error(refined.message || "Message not sent");
         } finally {
             setSending(false);
             setContatUsData({ name: '', email: '', message: '' });
