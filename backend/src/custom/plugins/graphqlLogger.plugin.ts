@@ -4,7 +4,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import { Logger } from '@nestjs/common';
 
-const logger = new Logger('GraphQL');
+const logger = new Logger(" GraphQL ");
 
 export function graphqlLoggerPlugin(): ApolloServerPlugin<any> {
   const logDir = path.join(process.cwd(), 'logs');

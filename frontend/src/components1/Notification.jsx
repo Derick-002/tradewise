@@ -27,6 +27,11 @@ const Notification = () => {
   const [markingAllAsRead, setMarkingAllAsRead] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
+  const [isConfirmReadOpen, setIsConfirmReadOpen] = useState(false);
+  const [notificationToMarkRead, setNotificationToMarkRead] = useState(null);
+  const [confirmReadText, setConfirmReadText] = useState('');
+  const [isConfirmAllOpen, setIsConfirmAllOpen] = useState(false);
+  const [confirmAllText, setConfirmAllText] = useState('');
 
   const filteredNotifications = notifications
     .filter(n => {
@@ -143,15 +148,26 @@ const Notification = () => {
     }
   };
 
-  const handleMarkAsRead = async (notificationId) => {
+  // Open confirmation modal for marking a single notification as read
+  const handleMarkAsRead = (notification) => {
+    if (notification && !notification.read) {
+      setNotificationToMarkRead(notification);
+      setConfirmReadText('');
+      setIsConfirmReadOpen(true);
+    }
+  };
+
+  // Confirm mark-as-read after user types the phrase
+  const confirmMarkAsRead = async () => {
+    if (!notificationToMarkRead || confirmReadText.toLowerCase().trim() !== 'read') return;
+
     try {
       const response = await backendGqlApi.post('/graphql', {
         query: markAsRead,
-        variables: { id: notificationId }
+        variables: { id: notificationToMarkRead.id }
       });
 
       if (response.data.errors) {
-        console.log("Error: ", response);
         toast.error('Error marking notification as read: ' + response.data.errors[0].message);
         return;
       }
@@ -159,22 +175,33 @@ const Notification = () => {
       // Update the notification in local state
       setNotifications(prev => 
         prev.map(notification => 
-          notification.id === notificationId 
+          notification.id === notificationToMarkRead.id
             ? { ...notification, read: true }
             : notification
         )
       );
 
-      toast.success('Notification marked as read');
+      toast.success('Notification marked as read and removed from unread list');
+      setIsConfirmReadOpen(false);
+      setNotificationToMarkRead(null);
+      setConfirmReadText('');
     } catch (error) {
       console.error('Error marking notification as read:', error);
       toast.error('Failed to mark notification as read');
     }
   };
 
-  const handleMarkAllAsRead = async () => {
-    if (markingAllAsRead) return; // Prevent multiple clicks
-    
+  // Open confirmation modal for marking all as read
+  const handleMarkAllAsRead = () => {
+    if (markingAllAsRead || unreadCount === 0) return;
+    setConfirmAllText('');
+    setIsConfirmAllOpen(true);
+  };
+
+  // Confirm mark-all-as-read after user types the phrase
+  const confirmMarkAllAsRead = async () => {
+    if (confirmAllText.toLowerCase().trim() !== 'read all') return;
+
     try {
       setMarkingAllAsRead(true);
       const response = await backendGqlApi.post('/graphql', {
@@ -182,16 +209,15 @@ const Notification = () => {
       });
 
       if (response.data.errors) {
-        console.log("Error: ", response);
         toast.error('Error marking all notifications as read: ' + response.data.errors[0].message);
         return;
       }
 
-      // Check if the mutation was successful
       if (response.data.data.markAllAsRead) {
-        // Update all notifications to read in local state
         setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
         toast.success('All notifications marked as read');
+        setIsConfirmAllOpen(false);
+        setConfirmAllText('');
       } else {
         toast.error('Failed to mark all notifications as read');
       }
@@ -390,8 +416,11 @@ const Notification = () => {
                   </button>
                   {!notification.read && (
                     <button 
-                      onClick={() => handleMarkAsRead(notification.id)}
-                      className="text-green-600 hover:text-green-800 text-sm flex items-center gap-1"
+                      onClick={() => {
+                        setNotificationToMarkRead(notification);
+                        setIsConfirmReadOpen(true);
+                      }}
+                      className="text-[#BE741E] hover:text-[#a4641c] text-sm flex items-center gap-1"
                       title="Mark as read"
                     >
                       <MdMarkEmailRead className="text-lg" />
@@ -423,8 +452,131 @@ const Notification = () => {
           navigate('/dashboard');
         }}
         notification={selectedNotification}
-        onMarkAsRead={handleMarkAsRead}
+        onMarkAsRead={() => selectedNotification && handleMarkAsRead(selectedNotification)}
       />
+
+      {/* Confirm Mark as Read Modal */}
+      {isConfirmReadOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">Confirm Mark as Read</h2>
+              <button
+                onClick={() => {
+                  setIsConfirmReadOpen(false);
+                  setNotificationToMarkRead(null);
+                  setConfirmReadText('');
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-gray-600">
+                You are about to mark this notification as <span className="font-semibold text-[#BE741E]">read</span>.
+                This will remove it from your unread list and <span className="font-semibold">cannot be undone</span>.
+                Once marked as read, you won't be able to bring it back as unread from here.
+              </p>
+              <p className="text-sm text-gray-500">
+                Type <span className="font-bold text-[#BE741E]">read</span> to confirm:
+              </p>
+              <input
+                type="text"
+                value={confirmReadText}
+                onChange={(e) => setConfirmReadText(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
+                placeholder="Type read"
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center justify-end gap-4 p-6 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setIsConfirmReadOpen(false);
+                  setNotificationToMarkRead(null);
+                  setConfirmReadText('');
+                }}
+                className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmMarkAsRead}
+                disabled={confirmReadText.toLowerCase().trim() !== 'read'}
+                className={`px-6 py-3 rounded-lg transition duration-200 ${
+                  confirmReadText.toLowerCase().trim() === 'read'
+                    ? 'bg-[#BE741E] text-white hover:bg-[#a4641c]'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Confirm Read
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Mark All as Read Modal */}
+      {isConfirmAllOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">Confirm Mark All as Read</h2>
+              <button
+                onClick={() => {
+                  setIsConfirmAllOpen(false);
+                  setConfirmAllText('');
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-gray-600">
+                You are about to mark <span className="font-semibold text-[#BE741E]">all notifications</span> as read.
+                This will clear your unread list and <span className="font-semibold">cannot be undone</span>.
+              </p>
+              <p className="text-sm text-gray-500">
+                Type <span className="font-bold text-[#BE741E]">read all</span> to confirm:
+              </p>
+              <input
+                type="text"
+                value={confirmAllText}
+                onChange={(e) => setConfirmAllText(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
+                placeholder="Type read all"
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center justify-end gap-4 p-6 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setIsConfirmAllOpen(false);
+                  setConfirmAllText('');
+                }}
+                className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmMarkAllAsRead}
+                disabled={confirmAllText.toLowerCase().trim() !== 'read all'}
+                className={`px-6 py-3 rounded-lg transition duration-200 ${
+                  confirmAllText.toLowerCase().trim() === 'read all'
+                    ? 'bg-[#BE741E] text-white hover:bg-[#a4641c]'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Confirm All Read
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

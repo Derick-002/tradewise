@@ -14,7 +14,7 @@ export type TLogger = {
     statusCode: number
 }
 
-const logger = new Logger("REST");
+const logger = new Logger("   REST  ");
 
 // Function-based logger middleware
 export function loggerMiddleware() {
@@ -38,16 +38,27 @@ export function loggerMiddleware() {
         const dataLength = req.socket.bytesRead;
         const statusCode = res.statusCode;
 
-        // Console logging with chalk
-        logger.log(
-            `${chalk.blue(method)} ${chalk.green(url)} ` +
-            `${chalk.yellow(statusCode.toString())} ${chalk.magenta(duration + 'ms')} ` +
-            `${chalk.cyan(dataLength.toString())} bytes ${chalk.gray((req as any).user?.sub || '-')}`
-        );
+        // Decide log level & label based on status code
+        const isError = statusCode >= 400;
+        const statusLabel = isError ? chalk.red('ERROR') : chalk.green('OK');
 
-        // File logging
+        const consoleMessage =
+            `${chalk.blue(method)} ${chalk.green(url)} ` +
+            `${chalk.yellow('HTTP ' + statusCode.toString())} ${chalk.magenta(duration + 'ms')} ` +
+            `${chalk.cyan(dataLength.toString())} bytes ${chalk.gray((req as any).user?.sub || '-')}` +
+            ` | ${statusLabel}`;
+
+        // Console logging with chalk (different level for errors)
+        if (isError) {
+            logger.error(consoleMessage);
+        } else {
+            logger.log(consoleMessage);
+        }
+
+        // File logging (keep full details, plain text)
+        const fileStatusLabel = isError ? 'ERROR' : 'OK';
         const logMessage = `
-[${new Date().toISOString()}] ${method} ${url} | Status: ${statusCode} | Host: ${host} | Client: ${clientName} | DataLength: ${dataLength} bytes | Duration: ${duration}ms | UserId: ${(req as any).user?.sub || ''}
+[${new Date().toISOString()}] ${method} ${url} | Status: ${statusCode} (${fileStatusLabel}) | Host: ${host} | Client: ${clientName} | DataLength: ${dataLength} bytes | Duration: ${duration}ms | UserId: ${(req as any).user?.sub || ''}
         `;
 
         fs.appendFile(logFilePath, logMessage + '\n', (err) => {

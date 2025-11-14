@@ -16,6 +16,9 @@ const CreditsDebit = () => {
   const [selectedFinancial, setSelectedFinancial] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
+  const [isConfirmPaidOpen, setIsConfirmPaidOpen] = useState(false);
+  const [financialToMarkPaid, setFinancialToMarkPaid] = useState(null);
+  const [confirmPaidText, setConfirmPaidText] = useState('');
   const navigate = useNavigate();
   const { financialId } = useParams();
 
@@ -91,27 +94,38 @@ const CreditsDebit = () => {
     navigate('/dashboard');
   };
 
-  // Handle mark as paid
-  const handleMarkAsPaid = async (financial) => {
+  // Open confirmation modal for marking as paid
+  const handleMarkAsPaid = (financial) => {
     if (!financial.paid) {
-      try {
-        const response = await backendGqlApi.post('/graphql', {
-          query: makeFinancialPaid,
-          variables: { financialId: financial.id }
-        });
-        
-        if (response.data.errors) {
-          console.log("Error", response);
-          toast.error('Error marking financial as paid: ' + response.data.errors[0].message);
-          return;
-        }
-        
-        toast.success('Financial marked as paid successfully!');
-        fetchFinancials(); // Refresh the data
-      } catch (error) {
-        console.error('Error marking financial as paid:', error);
-        toast.error('Failed to mark financial as paid');
+      setFinancialToMarkPaid(financial);
+      setConfirmPaidText('');
+      setIsConfirmPaidOpen(true);
+    }
+  };
+
+  // Actually perform mark-as-paid after confirmation
+  const confirmMarkAsPaid = async () => {
+    if (!financialToMarkPaid || confirmPaidText.toLowerCase().trim() !== 'mark as paid') return;
+
+    try {
+      const response = await backendGqlApi.post('/graphql', {
+        query: makeFinancialPaid,
+        variables: { financialId: financialToMarkPaid.id }
+      });
+      
+      if (response.data.errors) {
+        toast.error('Error marking financial as paid: ' + response.data.errors[0].message);
+        return;
       }
+      
+      toast.success('Financial marked as paid successfully!');
+      setIsConfirmPaidOpen(false);
+      setFinancialToMarkPaid(null);
+      setConfirmPaidText('');
+      fetchFinancials(); // Refresh the data
+    } catch (error) {
+      console.error('Error marking financial as paid:', error);
+      toast.error('Failed to mark financial as paid');
     }
   };
 
@@ -457,6 +471,69 @@ const CreditsDebit = () => {
         onMarkAsPaid={handleMarkAsPaid}
         onUpdateFinancial={handleUpdateFinancial}
       />
+
+      {/* Confirm Mark as Paid Modal */}
+      {isConfirmPaidOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">Confirm Mark as Paid</h2>
+              <button
+                onClick={() => {
+                  setIsConfirmPaidOpen(false);
+                  setFinancialToMarkPaid(null);
+                  setConfirmPaidText('');
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-gray-600">
+                You are about to mark this financial record as <span className="font-semibold text-[#BE741E]">paid back</span>.
+                This action affects your financial tracking and <span className="font-semibold">cannot be undone</span>.
+                Once marked as paid, you won't be able to revert it back to unpaid from here.
+              </p>
+              <p className="text-sm text-gray-500">
+                Type <span className="font-bold text-[#BE741E]">mark as paid</span> to confirm:
+              </p>
+              <input
+                type="text"
+                value={confirmPaidText}
+                onChange={(e) => setConfirmPaidText(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#BE741E] focus:border-transparent"
+                placeholder="Type mark as paid"
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center justify-end gap-4 p-6 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setIsConfirmPaidOpen(false);
+                  setFinancialToMarkPaid(null);
+                  setConfirmPaidText('');
+                }}
+                className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmMarkAsPaid}
+                disabled={confirmPaidText.toLowerCase().trim() !== 'mark as paid'}
+                className={`px-6 py-3 rounded-lg transition duration-200 ${
+                  confirmPaidText.toLowerCase().trim() === 'mark as paid'
+                    ? 'bg-[#BE741E] text-white hover:bg-[#a4641c]'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Confirm Paid
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
