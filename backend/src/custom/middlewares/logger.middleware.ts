@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
 import chalk from 'chalk';
+import { Logger } from '@nestjs/common';
 
 export type TLogger = {
     duration: number;
@@ -12,6 +13,8 @@ export type TLogger = {
     dataLength: number;
     statusCode: number
 }
+
+const logger = new Logger("REST");
 
 // Function-based logger middleware
 export function loggerMiddleware() {
@@ -36,7 +39,7 @@ export function loggerMiddleware() {
         const statusCode = res.statusCode;
 
         // Console logging with chalk
-        console.log(
+        logger.log(
             `${chalk.blue(method)} ${chalk.green(url)} ` +
             `${chalk.yellow(statusCode.toString())} ${chalk.magenta(duration + 'ms')} ` +
             `${chalk.cyan(dataLength.toString())} bytes ${chalk.gray((req as any).user?.sub || '-')}`
