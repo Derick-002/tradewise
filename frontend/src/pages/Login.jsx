@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Signupimage from '../assets/Login.jpg';
-import { EyeOff, Eye, Sparkles, ArrowRight, Moon, Sun } from 'lucide-react';
+import { EyeOff, Eye, Sparkles, ArrowRight, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { handleError } from '../utils/handleError';
@@ -13,15 +13,12 @@ const Login = () => {
   const navigate = useNavigate();
   const { user, loading } = useSelector((state) => state.auth);
 
-  React.useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
+  console.log("This is the auth-ed user: ", user);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [dark, setDark] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -38,6 +35,7 @@ const Login = () => {
       return;
     }
 
+    setIsLoggingIn(true);
     try {
       const resultAction = await dispatch(loginUser(formData));
 
@@ -51,6 +49,8 @@ const Login = () => {
     } catch (err) {
       const fullError = handleError(err);
       toast.error(fullError.message);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -93,8 +93,8 @@ const Login = () => {
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-20 h-20 bg-brand-500/10 rounded-full -mr-10 animate-float"></div>
 
               <form onSubmit={handleSubmit} className="w-full max-w-md flex flex-col gap-6">
-                <div className="text-center space-y-2">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-100 text-brand-700 dark:bg-white/10 dark:text-white/90">
+                <div className="text-center space-y-2 py-1">
+                  <div className="inline-flex items-center gap-2 px-3 -py-2 rounded-full bg-brand-100 text-brand-700 dark:bg-white/10 dark:text-white/90">
                     <Sparkles size={16} /> Make yourself at home
                   </div>
                   <h2 className="text-4xl font-bold bg-gradient-to-r from-brand-500 to-amber-600 bg-clip-text text-transparent">
@@ -161,10 +161,10 @@ const Login = () => {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isLoggingIn}
                   className="w-full py-3 px-4 mt-2 bg-gradient-to-r from-brand-500 to-amber-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-brand-600 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  {loading ? (
+                  {isLoggingIn ? (
                     <span className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       Signing in...
@@ -182,21 +182,6 @@ const Login = () => {
                   <div className="h-[1px] bg-gray-200 dark:bg-white/10"></div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    className="py-2.5 rounded-xl bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white hover:shadow-soft transition"
-                  >
-                    Google
-                  </button>
-                  <button
-                    type="button"
-                    className="py-2.5 rounded-xl bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white hover:shadow-soft transition"
-                  >
-                    Apple
-                  </button>
-                </div>
-
                 <p className="text-center text-sm text-gray-500 dark:text-gray-300">
                   Don't have an account?{' '}
                   <Link
@@ -210,9 +195,27 @@ const Login = () => {
                   <Link
                     to="/forgotpassword"
                     className="text-brand-600 text-md font-semibold underline hover:text-amber-600 transition-colors"
-                    >
+                  >
                     Forgot password?
                   </Link>
+                </p>
+                <p className="text-center text-sm text-gray-500 dark:text-gray-300 mt-1 flex items-center justify-center gap-4">
+                  <Link
+                    to="/"
+                    className="inline-flex items-center gap-1 text-brand-600 text-md font-semibold underline hover:text-amber-600 transition-colors"
+                  >
+                    <ArrowLeft size={16} />
+                    <span>Go to home</span>
+                  </Link>
+                  {user && (
+                    <Link
+                      to="/dashboard"
+                      className="inline-flex items-center gap-1 text-brand-600 text-md font-semibold underline hover:text-amber-600 transition-colors"
+                    >
+                      <ArrowLeft size={16} />
+                      <span>Go to dashboard</span>
+                    </Link>
+                  )}
                 </p>
               </form>
             </div>

@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdInventory, MdCheckCircle, MdSchedule, MdAccountBalance, MdShoppingCart } from 'react-icons/md';
+import { MdAdd, MdSearch, MdFilterList, MdEdit, MdDelete, MdVisibility, MdInventory, MdCheckCircle, MdSchedule, MdAccountBalance } from 'react-icons/md';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useNavigate, useParams } from 'react-router-dom';
 import AddItemForm from './forms/AddItemForm';
 import ViewModal from './modals/ViewModal';
 import EditModal from './modals/EditModal';
-import AddToCartButton from './buttons/AddToCartButton';
-import Cart from './Cart';
-import { useCart } from '../contexts/CartContext';
 import { getStockImagesQuery, createStockImageMutation, updateStockImageMutation, deleteStockImageMutation, findStockImagesByQuery } from '../utils/gqlQuery';
 import { backendGqlApi } from '../utils/axiosInstance';
 import { toast } from 'react-toastify';
@@ -15,13 +12,11 @@ import { toast } from 'react-toastify';
 const Stock = () => {
   const navigate = useNavigate();
   const { stockId } = useParams();
-  const { addToCart, getCartItemCount } = useCart();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [stockItems, setStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,11 +177,6 @@ const Stock = () => {
     }
   };
 
-  const handleAddToCart = (item) => {
-    addToCart(item);
-    alert(`${item.quantity} ${item.name}(s) added to cart!`);
-  };
-
   const handleDelete = (item) => {
     setItemToDelete(item);
     setIsDeleteModalOpen(true);
@@ -323,18 +313,6 @@ const Stock = () => {
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setIsCartOpen(true)}
-            className="bg-[#BE741E] text-white px-4 py-3 rounded-lg hover:bg-[#BE741E] transition duration-200 flex items-center gap-2 relative"
-          >
-            <MdShoppingCart className="text-xl" />
-            Cart
-            {getCartItemCount() > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#BE741E] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {getCartItemCount()}
-              </span>
-            )}
-          </button>
-          <button 
             onClick={() => setIsAddItemFormOpen(true)}
             className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition duration-200 flex items-center gap-2"
           >
@@ -454,11 +432,6 @@ const Stock = () => {
                       >
                         <MdDelete className="text-lg" />
                       </button>
-                      <AddToCartButton 
-                        item={item}
-                        onAddToCart={handleAddToCart}
-                        className="ml-2"
-                      />
                     </div>
                   </td>
                 </tr>
@@ -568,11 +541,6 @@ const Stock = () => {
         </div>
       )}
 
-      {/* Cart Modal */}
-      <Cart 
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-      />
     </div>
   );
 };

@@ -10,13 +10,14 @@ import { FaTwitter } from 'react-icons/fa';
 import { IoCall } from "react-icons/io5";
 import { IoLocationSharp } from "react-icons/io5";
 import { PiDownloadSimpleBold } from "react-icons/pi";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typewriter } from 'react-simple-typewriter';
 import backendApi from '../utils/axiosInstance';
 import { toast, ToastContainer } from 'react-toastify';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchUser } from '../features/auth/authThuck';
 
 const slides = [
   {
@@ -38,7 +39,9 @@ const slides = [
 
 const Home = () => {
     const [current, setcurrent ] = useState(0);
-    const { user, isAuthenticated } = useSelector((state) => state.auth);
+    const { user, loading } = useSelector((state) => state.auth);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const [sending, setSending] = useState(false)
     const [contactUsData, setContatUsData] = useState({
@@ -87,6 +90,13 @@ const Home = () => {
         return () => clearInterval(timer);
     },[]);
 
+    // Ensure we know the auth-ed user on home even after refresh
+    useEffect(() => {
+        if (user === null) {
+            dispatch(fetchUser());
+        }
+    }, [user, dispatch]);
+
     return (
         <>            
             <div className={styles.home_container}>
@@ -97,23 +107,27 @@ const Home = () => {
                         <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}>Home</a>
                         <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>About</a>
                         <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('services'); }}>Services</a>
-                        <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('faq'); }}>Q&A</a>
                         <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('faq'); }}>Q&A</a>
                     </div>
 
                     <div className={styles.home_navbar_buttons}>
-                        {!isAuthenticated ? (
-                            <>
-                                <button><Link to='/signup'>Signup</Link></button>
-                                <button><Link to='/login'>Login</Link></button>
-                            </>
-                        ) : (
-                            <button className="bg-[#BE741E] text-white border-none flex items-center gap-2 px-4 py-2 rounded-lg">
-                                <Link to='/dashboard' className="flex items-center gap-2 text-white no-underline">
+                        {loading ? null : (
+                            !user ? (
+                                <>
+                                    <button type="button" onClick={() => navigate('/signup')}>Signup</button>
+                                    <button type="button" onClick={() => navigate('/login')}>Login</button>
+                                </>
+                            ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => navigate('/dashboard')}
+                                  className="bg-[#BE741E] text-white border-none flex items-center gap-2 px-4 py-2 rounded-lg"
+                                >
                                     <MdDashboard className="text-xl" />
                                     Go To Dashboard
-                                </Link>
-                            </button>
+                                </button>
+                            )
                         )}
                     </div>
                 </div>

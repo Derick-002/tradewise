@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { MdDashboard, MdStorage, MdHistory, MdShoppingBag, MdAttachMoney, MdNotifications, MdCreditCard, MdLogout } from "react-icons/md";
+import { MdDashboard, MdStorage, MdHistory, MdShoppingBag, MdAttachMoney, MdNotifications, MdCreditCard, MdLogout, MdHome } from "react-icons/md";
 import logo from '../assets/logo.png';
 import Dashboard from './Dashboard';
 import Stock from './Stock';
@@ -257,6 +257,13 @@ const DashboardLayout = () => {
             </p>
           </div>
           <div className="relative flex flex-row items-center justify-center text-center">
+            <button
+              className='text-gray-600 mx-2 hover:text-black'
+              onClick={() => navigate('/')}
+              title="Go to Home"
+            >
+              <MdHome size={24} />
+            </button>
             <button className='text-gray-600 mx-2 hover:text-black' onClick={() => setActiveTab('profile')}>
               <CgProfile size={24}/>
             </button>

@@ -65,13 +65,17 @@ function App() {
               </ProtectedRoute>
             }></Route>
 
-            <Route path="/" element={ <Home />}></Route>
+            <Route path="/" element={<Home />}></Route>
             <Route path="/login" element={ 
-              <Login />
+              <ProtectedRoute requireAuth={false}>
+                <Login />
+              </ProtectedRoute>
             }></Route>
 
             <Route path="/signup" element={
-              <Signup />
+              <ProtectedRoute requireAuth={false}>
+                <Signup />
+              </ProtectedRoute>
             }></Route>
 
             <Route path='/email' element={
