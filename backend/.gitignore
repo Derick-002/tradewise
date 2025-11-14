@@ -60,3 +60,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 #migration
 generated/
 prisma/migrations
+
+#IDE based
+/.idea
+/.vscode
+/.cursor

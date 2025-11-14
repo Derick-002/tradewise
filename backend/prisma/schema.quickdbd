@@ -1,0 +1,119 @@
+go to: https://app.quickdatabasediagrams.com/#/
+paste this: 
+
+MTrader
+-
+id string PK
+isVerified boolean
+enterpriseName string
+email string
+phone string
+password string
+resetPasswordToken string
+verifyAccountToken string
+resetPasswordExpires datetime
+verifyAccountExpires datetime
+createdAt datetime
+updatedAt datetime
+lastLogin datetime
+
+MTraderSettings
+-
+id string PK
+enterpriseDescription string
+name string
+currency string
+businessType string
+industry string
+foundedYear int
+description string
+website string
+address string
+businessHours string
+phoneNumber string
+anualRevenue float
+numberOfEmployees int
+paymentMethod string
+targetMarket string
+competitors string
+goals string
+createdAt datetime
+updatedAt datetime
+traderId string FK >- MTrader.id
+
+MStock
+-
+id string PK
+createdAt datetime
+updatedAt datetime
+markAsBought boolean
+traderId string FK >- MTrader.id
+
+MStockImage
+-
+id string PK
+name string
+unit string
+quantity int
+notified boolean
+low_stock_quantity int
+createdAt datetime
+updatedAt datetime
+stockId string FK >- MStock.id
+
+MProduct
+-
+id string PK
+name string
+quantity int
+price float
+createdAt datetime
+updatedAt datetime
+stockImageId string FK >- MStockImage.id
+
+MBuyList
+-
+id string PK
+name string
+quantity float
+createdAt datetime
+updatedAt datetime
+stockId string FK >- MStock.id
+
+MTransaction
+-
+id string PK
+type string
+description string
+secondParty string
+createdAt datetime
+updatedAt datetime
+stockId string FK >- MStock.id
+
+MFinancial
+-
+id string PK
+type string
+amount float
+description string
+collateral string
+isPaidBack boolean
+isNotified boolean
+deadline datetime
+createdAt datetime
+updatedAt datetime
+stockId string FK >- MStock.id
+transactionId string FK >- MTransaction.id
+
+MNotification
+-
+id string PK
+title string
+message string
+impact string
+filterType string
+type string
+read boolean
+createdAt datetime
+updatedAt datetime
+traderId string FK >- MTrader.id
