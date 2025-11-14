@@ -100,4 +100,15 @@ export class ScheduleService {
 
         this.logger.log(`Cleared ${deleted.count} old verify email OTPs(Tokens).`);
     }
+
+    @Interval(5 * 60 * 1_000)
+    public async clearReadNotifications() {
+        // clear read notifications older than 1hr (when we mark as read it updates the updatedAt field)
+        const cutoffDate = new Date(Date.now() - 60 * 60 * 1000);
+        const deleted = await this.prismaService.mNotification.deleteMany({
+            where: { read: true, updatedAt: { lte: cutoffDate } },
+        });
+
+        this.logger.log(`Cleared ${deleted.count} read notifications.`);
+    }
 }
