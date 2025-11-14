@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { EUnitType } from 'generated/prisma';
 import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -60,7 +60,7 @@ export class StockService {
                     name_stockId: { name: nameLower, stockId: stock.id }
                 }
             });
-            if (!existing) throw new BadRequestException('Stock image already exists for this stock');
+            if (existing) throw new BadRequestException('Stock product already exists for this stock');
 
             const stockImage = await this.prismaService.mStockImage.create({
                 data: {
@@ -76,11 +76,7 @@ export class StockService {
 
             return stockImage;
         } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError) {
-                if (error.code === 'P2002') {
-                    throw new BadRequestException('Stock image already exists');
-                }
-            }
+            throw error;
         }
     }
 
@@ -145,7 +141,7 @@ export class StockService {
             return stockImage;
         } catch (error) {
             if (error instanceof PrismaClientKnownRequestError) 
-                if (error.code === 'P2025') 
+                if (error.code === 'P2025')
                     throw new BadRequestException('Product not found');
         }
     }
