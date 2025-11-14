@@ -7,7 +7,6 @@ import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
 import { jwtDecodeMiddleware } from './custom/middlewares/jwtDecode.middleware';
 import { loggerMiddleware } from './custom/middlewares/logger.middleware';
-import { cloudinaryConfig } from './custom/utils/cloudinary.config';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -25,8 +24,6 @@ async function bootstrap() {
     // Middlewares
     app.use(loggerMiddleware());
     app.use(jwtDecodeMiddleware());
-    
-    cloudinaryConfig(configService);
 
     const port = configService.get<number>('port') ?? 3000;
     const nodeEnv = configService.get<string>('node_env') ?? 'development';

@@ -20,7 +20,6 @@ import { MTrader } from 'generated/prisma';
 import generateOtp from 'src/custom/utils/generate.otp';
 import { CurrencyService } from 'src/custom/utils/currency.md';
 import { EPaymentMethod } from 'src/graphql/circular-dependency';
-import { generatePT, generatePTId, verifyPT } from 'src/custom/utils/passanger-encrypt';
 
 @Injectable()
 export class AuthService {
@@ -63,12 +62,10 @@ export class AuthService {
             throw new BadRequestException('User with this email already exists');
 
         const id = idTools.generateUlid();
-        const pTId = generatePTId();
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await this.prismaService.mTrader.create({
             data: {
                 id,
-                pTId,
                 email,
                 phone,
                 enterpriseName,
@@ -96,7 +93,7 @@ export class AuthService {
             }
         });
 
-        return { newUser, pT: generatePT(pTId) };
+        return newUser;
     }
 
     public async login(details: TLoginDetails) {
@@ -115,13 +112,12 @@ export class AuthService {
         if (!isPasswordValid) 
             throw new BadRequestException('Invalid credentials');
 
-        const pTId = generatePTId();
         const loginUser = await this.prismaService.mTrader.update({
             where: { id: user.id },
-            data: { lastLogin: new Date(), pTId },
+            data: { lastLogin: new Date() },
         });
 
-        return { loginUser, pT: generatePT(pTId) };
+        return loginUser;
     }
 
     public async update(details: TUpdateDetails, id: string) {
@@ -251,36 +247,6 @@ export class AuthService {
         });
 
         return user;
-    }
-
-    public async checkAuth(traderId: string, passengerToken: string) {
-        const pTpayload = verifyPT(passengerToken);
-        if (!pTpayload)
-            throw new UnauthorizedException('Invalid Passenger Token1');
-
-        const pTId = generatePTId();
-        const pT = generatePT(pTId);
-        
-        console.log("pTId", pTId);
-        console.log("pTpayload.ulid", pTpayload.ulid);
-        console.log("traderId", traderId);
-        console.log("pT", pT);
-
-        const traderExists = await this.prismaService.mTrader.findUnique({
-            where: { pTId: pTpayload.ulid, id: traderId },
-        });
-        if (!traderExists) 
-            throw new UnauthorizedException('Invalid Passenger Token2');
-
-        const trade = await this.prismaService.mTrader.update({
-            where: { id: traderId },
-            data: { pTId }
-        });
-
-        return {
-            verified: true,
-            pT: pT
-        };
     }
 
     public async getOnboarding(id: string) {

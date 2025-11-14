@@ -45,8 +45,6 @@ import { graphqlLoggerPlugin } from './custom/plugins/graphqlLogger.plugin';
                             user = undefined;
                         }
                     }
-                    // const business = await prismaService.mTraderSettings.findUnique({ where: { traderId:user?.sub } });
-                    // if (!business) throw new UnauthorizedException('Bussiness settings not found');
 
                     req.user = user;
                     return { req, res, user };
