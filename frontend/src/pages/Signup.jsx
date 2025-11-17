@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Loginimage from '../assets/Login.jpg';
 import { Eye, EyeOff, Sparkles, ArrowRight, ArrowLeft, Moon, Sun } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from '../utils/toast';
 import { handleError } from '../utils/handleError';
 import { useDispatch, useSelector } from 'react-redux';
 import { signupUser } from '../features/auth/authThuck';
@@ -66,16 +65,6 @@ const Signup = () => {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        pauseOnHover
-        draggable
-        theme="colored"
-      />
 
       <div className={`${dark ? 'dark' : ''}`}>
         <div className="min-h-screen flex items-center justify-center overflow-hidden relative bg-gradient-to-b from-white to-brand-50 dark:from-[#0B0B10] dark:to-[#0B0B10]">
@@ -158,7 +147,7 @@ const Signup = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2/3 transform -translate-y-1/2 text-gray-500 hover:text-brand-500"
+                      className="absolute right-3 top-2/3 transform -translate-y-3 text-gray-500 hover:text-brand-500"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>

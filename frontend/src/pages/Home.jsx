@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typewriter } from 'react-simple-typewriter';
 import backendApi from '../utils/axiosInstance';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchUser } from '../features/auth/authThuck';
 

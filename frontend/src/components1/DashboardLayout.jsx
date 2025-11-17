@@ -14,7 +14,7 @@ import '../index.css';
 // Removed mock imports - using real backend data
 import { CgProfile } from "react-icons/cg";
 
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from '../utils/toast';
 import { handleError } from '../utils/handleError';
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../features/auth/authThuck";
@@ -28,11 +28,17 @@ const DashboardLayout = () => {
   const dispatch = useDispatch();
   const params = useParams();
   const location = useLocation();
+
+  const { user } = useSelector((state) => state.auth);
+  useEffect(() => {
+    if (!user) navigate("/login");
+    if (!user?.isVerified) navigate("/email");
+  }, [user, navigate]);
+  
   const [activeTab, setActiveTab] = useState(() => {
     // Load saved tab from localStorage, default to 'dashboard'
     return localStorage.getItem('dashboardActiveTab') || 'dashboard';
   });
-  const { user } = useSelector((state) => state.auth);
 
   // Handle transaction URL routing with backend search
   useEffect(() => {
@@ -83,10 +89,6 @@ const DashboardLayout = () => {
     }
   }, [params.id, location.pathname, navigate]);
 
-  useEffect(() => {
-    if (!user) navigate("/login");
-    if (!user?.isVerified) navigate("/email");
-  }, [user, navigate]);
 
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -206,7 +208,6 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen bg-white font-sans text-gray-800 hide-scrollbar">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={true} closeOnClick pauseOnHover draggable theme="colored" />
 
       {/* Sidebar (navbar) */}
       <div className="w-64 shadow-2xl flex flex-col border-r border-gray-200 hide-scrollbar" style={{ backgroundColor: '#be741e' }}>

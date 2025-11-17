@@ -7,7 +7,7 @@ export const signupUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const res = await backendApi.post("/auth/register", userData);
-      return res.data.newUser;
+      return res.data;
     } catch (err) {
       const fullError = handleError(err);
       return rejectWithValue(fullError.message || "Signup failed");
@@ -21,7 +21,7 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await backendApi.post("/auth/login", userData);
 
-      return res.data.loginUser;
+      return res.data;
     } catch (err) {
       const fullError = handleError(err);
       return rejectWithValue(fullError.message || "Login failed");

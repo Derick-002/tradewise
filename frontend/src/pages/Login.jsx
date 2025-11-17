@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Signupimage from '../assets/Login.jpg';
 import { EyeOff, Eye, Sparkles, ArrowRight, ArrowLeft, Moon, Sun } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from '../utils/toast';
 import { handleError } from '../utils/handleError';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../features/auth/authThuck';
@@ -12,8 +11,6 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, loading } = useSelector((state) => state.auth);
-
-  console.log("This is the auth-ed user: ", user);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -56,16 +53,6 @@ const Login = () => {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        pauseOnHover
-        draggable
-        theme="colored"
-      />
 
       <div className={`${dark ? 'dark' : ''}`}>
         <div className="min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-brand-50 dark:from-[#0B0B10] dark:to-[#0B0B10]">

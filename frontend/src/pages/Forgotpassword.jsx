@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import Signupimage from '../assets/Login.jpg'
 import backendApi from '../utils/axiosInstance'
 import { handleError } from '../utils/handleError'
-import { toast } from 'react-toastify'
+import { toast } from '../utils/toast'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 

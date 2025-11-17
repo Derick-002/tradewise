@@ -7,6 +7,7 @@ import { CgSpinner } from "react-icons/cg";
 const ProtectedRoute = ({ 
     children, 
     requireAuth = true,
+    requireVerified = true,
 }) => {
   const { user, loading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -34,6 +35,10 @@ const ProtectedRoute = ({
 
   if (requireAuth && !user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (requireVerified && user && !user.isVerified) {
+    return <Navigate to="/email" replace />;
   }
 
   if (!requireAuth && user && !loading) {

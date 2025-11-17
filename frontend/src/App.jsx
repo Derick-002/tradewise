@@ -13,8 +13,6 @@ import { CartProvider } from "./contexts/CartContext";
 import Forgotpassword from "./pages/Forgotpassword";
 import Resetpassword from "./pages/Resetpassword";
 import NotFound from "./pages/Notfound";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './components1/ProtectedRoute';
 import Analytics from "./pages/Analytics";
 import Stock from "./components1/Stock";
@@ -22,7 +20,6 @@ import Stock from "./components1/Stock";
 function App() {
   return (
     <>
-      <ToastContainer />
       <Router>
         <Routes>            
             <Route path='/dashboard' element={
@@ -79,7 +76,7 @@ function App() {
             }></Route>
 
             <Route path='/email' element={
-              <ProtectedRoute verified={false}>
+              <ProtectedRoute requireVerified={false}>
                 <VerifyEmail />
               </ProtectedRoute>
             }></Route>
