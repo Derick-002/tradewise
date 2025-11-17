@@ -3,7 +3,7 @@ import { MdEdit, MdClose, MdCheck, MdShield, MdEmail, MdBusiness } from 'react-i
 import { useSelector } from 'react-redux';
 import backendApi from '../utils/axiosInstance';
 import { handleError } from '../utils/handleError';
-import { toast } from 'react-toastify';
+import { toast } from '../utils/toast';
 
 const Profile = () => {
   const { user } = useSelector((state) => state.auth);
@@ -168,7 +168,7 @@ const Profile = () => {
 
       setEditing(false);
       // hasChangesMemo will automatically update to false since formData now matches originalData
-      toast.success('Profile saved successfully!');
+      toast.success("Profile and settings saved successfully");
     } catch (error) {
       const refinedError = handleError(error);
       console.error(refinedError, error);
