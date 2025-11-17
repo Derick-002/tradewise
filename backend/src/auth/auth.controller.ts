@@ -37,9 +37,9 @@ export class AuthController {
         @ValidatedBody(registerSchema) dto: any,
         @Res({ passthrough: true }) res: Response
     ) {
-        const output = await this.authService.register(dto);
+        const newUser = await this.authService.register(dto);
         
-        const token = await this.authService.generateToken(output.newUser.id);
+        const token = await this.authService.generateToken(newUser.id);
         res.cookie('accessToken', token, {
             httpOnly: true,
             secure: this.configService.get('NODE_ENV') === 'production',
@@ -49,13 +49,13 @@ export class AuthController {
 
         try {
             // create the verify email token and send email
-            const otp = await this.authService.sendOtp({ email: output.newUser.email as string, isPasswordReset: false });
-            await this.emailService.verifyAccount(otp, output.newUser.email as string);
+            const otp = await this.authService.sendOtp({ email: newUser.email as string, isPasswordReset: false });
+            await this.emailService.verifyAccount(otp, newUser.email as string);
         } catch (error) {
             throw new InternalServerErrorException('Failed to send email', error.message);
         }
  
-        return output;
+        return newUser;
     }
     
     // @UseGuards(UnProtectedRouteGuard)
@@ -65,9 +65,9 @@ export class AuthController {
         @ValidatedBody(loginSchema) dto: any,
         @Res({ passthrough: true }) res: Response
     ) {
-        const output = await this.authService.login(dto);
+        const loginUser = await this.authService.login(dto);
         
-        const token = await this.authService.generateToken(output.loginUser.id);
+        const token = await this.authService.generateToken(loginUser.id);
         res.cookie('accessToken', token, {
             httpOnly: true,
             secure: this.configService.get('NODE_ENV') === 'production',
@@ -75,7 +75,7 @@ export class AuthController {
             maxAge: this.time // for 7 days
         });
         
-        return output;
+        return loginUser;
     }
     
     @UseGuards(ProtectedRouteGuard)
@@ -112,14 +112,5 @@ export class AuthController {
         @CurrentUser() user: IJwtPayload,
     ) {
         return this.authService.getSettings(user.sub);
-    }
-
-    @Post('check')
-    @UseGuards(ProtectedRouteGuard)
-    public async checkAuth(
-        @CurrentUser() user: IJwtPayload,
-        @Body() body: any
-    ){
-        return this.authService.checkAuth(user.sub, body.pT);
     }
 }
